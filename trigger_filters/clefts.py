@@ -11,19 +11,27 @@ be_verb = ["'s", "is", "was"]
 determiners = ["the", "my"]
 comp = ["who", "that"]
 
-context_buffer = [next(coca1), next(coca1)]
 for line in coca1:
-    words = line.lower().split()
-    cleft_word = np.intersect1d(words, cleft_prefixes)
-    if len(cleft_word) > 0:
-        if words[words.index(cleft_word) + 1] in be_verb:
-            if words[words.index(cleft_word) + 2] in determiners:
-                if len(words) > words.index(cleft_word) + 3 and len(np.intersect1d(words[words.index(cleft_word) + 3:], comp)) > 0:
-                    for s in context_buffer:
-                        cleft_file.write(s)
-                    print(line)
-                    cleft_file.write(line + "\n")
-                    cleft_file.flush()
-    context_buffer.pop(0)
-    context_buffer.append(line)
+    lines = line.split("#")
+    for i in range(1, len(lines)):
+        this_line = ''.join(map(str, lines[i]))
+        words = this_line.lower().split()
+        cleft_word = np.intersect1d(words, cleft_prefixes)
+        if len(cleft_word) > 0 and words.index(cleft_word)+3 <= len(words):
+            if words[words.index(cleft_word) + 1] in be_verb:
+                if words[words.index(cleft_word) + 2] in determiners:
+                    if len(np.intersect1d(words[words.index(cleft_word) + 3:], comp)) > 0:
+                        if len(words) < words.index(cleft_word) + 8:
+                            print(this_line)
+                            prev_line = ''.join(map(str, lines[i-1]))
+                            cleft_file.write(prev_line)
+                            cleft_file.write(this_line + "\n" + "\n")
+                            cleft_file.flush()
+                        elif len(np.intersect1d(words[words.index(cleft_word) + 3:words.index(cleft_word) + 8], comp)) > 0:
+                            print(this_line)
+                            prev_line = ''.join(map(str, lines[i - 1]))
+                            cleft_file.write(prev_line)
+                            cleft_file.write(this_line + "\n" + "\n")
+                            cleft_file.flush()
+
 cleft_file.close()

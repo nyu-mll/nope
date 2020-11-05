@@ -40,13 +40,15 @@ for line in coca1:
     context_buffer = ["", ""]
     for sentence in doc.sents:
         if check_cleft(sentence):
+            counter += 1
+            print(counter)
             cleft_dict = {"context1": context_buffer[0], "context2":context_buffer[1],"sentence": sentence}
             cleft_file.write(str(cleft_dict) + "\n")
             cleft_file.flush()
         context_buffer.pop(0)
         context_buffer.append(sentence)
-    counter+=1
-    if counter > 1000:
-        break
+    # counter+=1
+    # if counter > 1000:
+    #     break
 
 cleft_file.close()

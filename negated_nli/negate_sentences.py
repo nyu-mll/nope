@@ -2,7 +2,6 @@
 # https://github.com/vered1986/PythonUtils/blob/master/misc/negate_statement.py
 
 import spacy
-from pattern import en  # this is needed to get the bare form of verbs
 
 class CantFindMainVerbError(Exception):
     def __init__(self):
@@ -66,7 +65,7 @@ def negate(token):
         do = "did"
     else:
         raise CantFindMainVerbError
-    verb_bare = en.conjugate(verb_text, tense=en.INFINITIVE)
+    verb_bare = token.lemma_
     return do + " not " + verb_bare
 
 

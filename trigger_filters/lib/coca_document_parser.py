@@ -1,7 +1,7 @@
 import re
 
 
-DOC_ID_PATTERN = re.compile("^@@[0-9]+")
+DOC_ID_PATTERN = re.compile("^(@@|##)[0-9]+")
 SEGMENT_SPLIT_PATTERN = re.compile("([.?!])[^.?!]+@[@ ]+@[^.!?]+[.!?]")
 ALTERNATIVE_TURN_MARKER_PATTERN = re.compile("([A-Z -]+ [(] [A-Z -]+ [)])")
 TURN_MARKER_PATTERN = re.compile("@!([^#]+)#")
@@ -60,7 +60,6 @@ class COCADoc(object):
 
     def __init__(self, doc_str):
         super().__init__()
-
         doc_str =  doc_str.strip()
         doc_str = self.remove_directives(doc_str)
         self.doc_id, doc_content = self.extract_document_id(doc_str)

@@ -3,7 +3,11 @@
 import sys, argparse, os
 import spacy
 from spacy_conll import ConllFormatter
-from lib.coca_document_parser import COCADoc
+from coca_document_parser import COCADoc
+import re
+
+
+EMPTY_LINE_PATTERN = re.compile("^\s*$")
 
 
 def main():
@@ -22,6 +26,8 @@ def main():
     base_name = os.path.basename(args.input).replace(".txt", "")
     with open(args.input, 'r') as corpus_f:
         for line in corpus_f:
+            if EMPTY_LINE_PATTERN.match(line):
+                continue
             coca_doc = COCADoc(line)
             doc_id = coca_doc.doc_id.replace("@@", "")
             for segment_no, segment in enumerate(coca_doc.segments):

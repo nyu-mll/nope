@@ -24,9 +24,9 @@ def check_cleft(sentence):
             for child in cop.children:
                 #print(child.dep_,child.text)
                 if child.dep_ in ['attr','dobj']:
-                     obj = child
-                     break
-             if obj is not None:
+                    obj = child
+                    break
+            if obj is not None:
                 for child in obj.children:
                     if child.dep_ in ['ccomp', 'relcl']:
                         for child2 in child.children:
@@ -42,11 +42,11 @@ for line in coca1:
         if check_cleft(sentence):
             counter += 1
             print(counter)
-            cleft_dict = {"context1": context_buffer[0], "context2":context_buffer[1],"sentence": sentence}
+            cleft_dict = {"context1": context_buffer[0], "context2":context_buffer[1],"sentence": sentence.text.strip()}
             cleft_file.write(str(cleft_dict) + "\n")
             cleft_file.flush()
         context_buffer.pop(0)
-        context_buffer.append(sentence)
+        context_buffer.append(sentence.text.strip())
     # counter+=1
     # if counter > 1000:
     #     break

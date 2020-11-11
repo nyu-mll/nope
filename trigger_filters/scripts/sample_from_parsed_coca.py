@@ -17,7 +17,7 @@ def main():
         for file in os.listdir(os.path.join(args.parsed_path, genre)):
             if not file.endswith(".conll"):
                 continue
-            in_file = open(os.path.join(args.parsed_path, genre, file))
+            in_file = open(os.path.join(args.parsed_path, genre, file), encoding="utf-8")
             try:
                 while True:
                     n_sentences += 1

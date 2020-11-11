@@ -13,6 +13,7 @@ def main():
     nlp = spacy.load("en_core_web_sm")
     for line in open(file):
         doc = nlp(line)
+        print(doc)
         for sentence in doc.sents:      # This is only necessary because the COCA sample I have is not segmented by sentence.
             neg1 = negate_main_verb(sentence)
             print(neg1)

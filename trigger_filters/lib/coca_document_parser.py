@@ -3,17 +3,23 @@ import re
 
 DOC_ID_PATTERN = re.compile("^@@[0-9]+")
 SEGMENT_SPLIT_PATTERN = re.compile("([.?!])[^.?!]+@[@ ]+@[^.!?]+[.!?]")
+ALTERNATIVE_TURN_MARKER_PATTERN = re.compile("([A-Z -]+ [(] [A-Z -]+ [)])")
 TURN_MARKER_PATTERN = re.compile("@!([^#]+)#")
 DIRECTIVE_PATTERN = re.compile("@\([^)]+\)")
 
 class COCASegment(object):
 
     def extract_turns(self, segment_str):
+
         match = TURN_MARKER_PATTERN.search(segment_str)
 
         # document without turns
         if match is None:
             return [(None, segment_str)]
+
+        # Normalize alternative turn marking of the form "PAUL RYAN ( REPUBLICAN VICE PRESIDENTIAL NOMINEE )""
+        segment_str = ALTERNATIVE_TURN_MARKER_PATTERN.sub("@!\g<1>#", segment_str)
+
 
         raw_turns = segment_str.split("@!")
         turns = []

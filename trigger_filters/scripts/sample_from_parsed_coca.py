@@ -19,6 +19,9 @@ def main():
                 continue
             in_file = open(os.path.join(args.parsed_path, genre, file), encoding="utf-8")
             try:
+                last_segment = ""
+                curr_segment = ""
+                segment = []
                 while True:
                     n_sentences += 1
                     chunk = ""
@@ -26,12 +29,18 @@ def main():
                     while line != "\n":
                         chunk += line
                         line = next(in_file)
-                    if random.uniform(0, 1) < args.proportion_sentences:
-                        chunk = chunk.split("\n")
-                        chunk.insert(1, f"# genre = {genre}")
-                        chunk.insert(2, f"# file = {file}")
-                        chunk = "\n".join(chunk)
-                        out_file.write(chunk + "\n")
+                    chunk = chunk.split("\n")
+                    last_segment = curr_segment
+                    curr_segment = chunk[2]
+                    chunk.insert(1, f"# genre = {genre}")
+                    chunk.insert(2, f"# file = {file}")
+                    chunk = "\n".join(chunk)
+                    if curr_segment == last_segment:
+                        segment.append(chunk)
+                    else:
+                        if random.uniform(0, 1) < args.proportion_sentences:
+                            out_file.write("\n".join(segment) + "\n")
+                        segment = []
             except StopIteration:
                 continue
     print(n_sentences)

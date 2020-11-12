@@ -2,31 +2,10 @@ import spacy
 import argparse
 import json
 
-from lib.coca_document_parser import COCADoc
+# import CoNLLReader class
+from lib.conll_reader import CoNLLReader
 
-nlp = spacy.load("en_core_web_sm")
-
-def extract_examples_from_segment(segment, cos_predicates):
-    context_buffer = [(None, ""), (None, "")]
-    for speaker, turn_content in segment.turns:
-        spacy_doc = nlp(turn_content)
-        for sentence in spacy_doc.sents:
-            for token in sentence:
-                if str(token) in cos_predicates and token.tag_[0] == "V" and token.dep_ == "ROOT":
-                    include = False
-                    for child in token.children:
-                        if child.dep_ in ["xcomp", "ccomp"]:
-                            include = True
-                            break
-                    if include:
-                        yield (context_buffer, speaker, sentence, str(token))
-                    break
-            context_buffer.pop(0)
-            context_buffer.append((speaker, sentence))
-
-
-def example_to_jsonl(ex):
-    context_buffer, target_speaker, target_sentence, target_token  = ex
+def example_to_jsonl(context_buffer, target_speaker, target_sentence, target_token):
     obj = {
             "context1_speaker": context_buffer[0][0],
             "context1": str(context_buffer[0][1]),
@@ -45,37 +24,56 @@ def main(corpus_path, cos_predicate_path, output_path):
     with open(cos_predicate_path, 'r') as f:
         change_of_state_predicates = set([l.strip() for l in f])
 
-    with  open(corpus_path, 'r') as corpus, open(output_path, 'w') as out_f:
+    with open(output_path, 'w') as out_f:
+
+        # initialize the context buffer
+        context_buffer = [(None, ""), (None, "")]
+
+        # keep track of current segment name
+        prev_segment_name = ""
         cnt = 0
-        for line in corpus:
-            coca_doc = COCADoc(line)
-            for segment in coca_doc.segments:
-                words = segment.raw_segment.lower().split()
-                if set(words) & change_of_state_predicates:
-                    for ex in extract_examples_from_segment(segment, change_of_state_predicates):
-                        print(example_to_jsonl(ex), file=out_f)
+
+        # loop through parsed sentences
+        # sentence is a scipy "Doc" object
+        for sentence, metadata in CoNLLReader(corpus_path):
+
+            # check if the segment changed and reset context buffer
+            if prev_segment_name != metadata["segment_id"]:
+                context_buffer = [(None, ""), (None, "")]
+                prev_segment_name = metadata["segment_id"]
+
+            # extract words as list of strings
+            words = [t.text for t in sentence]
+
+            # extract speaker
+            speaker = metadata["speaker"]
+
+            if set(words) & change_of_state_predicates:
+                for token in sentence:
+                    if (str(token) in change_of_state_predicates
+                      and token.tag_[0] == "V"
+                      and token.dep_ == "ROOT"):
+                        include = False
+                        for child in token.children:
+                            if child.dep_ in ["xcomp", "ccomp"]:
+                                include = True
+                                break
+
+                        if include:
+                            # write example to jsonl file
+                            out_f.write(example_to_jsonl(context_buffer, speaker, sentence, str(token)))
+                            out_f.write("\n")
+                            break
+
+            # update context buffer
+            context_buffer.pop(0)
+            context_buffer.append((speaker, sentence))
+
+            # print status updates
             cnt +=1
             if cnt % 100 == 0:
-                print(f"Processed {cnt} documents...")
+                print(f"Processed {cnt} sentences...")
 
-
-
-
-
-        #    for s in context_buffer:
-        #        output.write(s)
-    #        output.write(line + "\n")
-#            output.flush()
-#        context_buffer.pop(0)
-    #    context_buffer.append(line)
-
-
-
-
-# TODO: I could limit to the matrix verb
-# TODO: I could limit length of sentence
-# TODO: I could limit to realis uses
-# TODO: Add more predicates
 
 
 if __name__ == '__main__':

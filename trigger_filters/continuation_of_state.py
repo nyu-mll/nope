@@ -1,6 +1,6 @@
-import spacy
 import argparse
 import json
+import spacy
 
 # import CoNLLReader class
 from lib.conll_reader import CoNLLReader

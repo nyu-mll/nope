@@ -1,8 +1,10 @@
 import spacy
 import numpy as np
 
-coca1 = open("C:/Users/NYUCM Loaner Access/Documents/GitHub/presupposition_dataset/COCA_sample_10MB.txt")
-cleft_file = open("C:/Users/NYUCM Loaner Access/Documents/GitHub/presupposition_dataset/trigger_filters/outputs/clefts.txt", "w")
+# import CoNLLReader class
+from lib.conll_reader import CoNLLReader
+
+cleft_file_2 = open("C:/Users/NYUCM Loaner Access/Documents/GitHub/presupposition_dataset/trigger_filters/outputs/clefts.jsonl", "w")
 
 cleft_prefixes = ["it"]
 be_verb = ["'s", "is", "was"]
@@ -11,6 +13,8 @@ comp = ["who", "that"]
 
 #initialize spacy processor
 nlp = spacy.load("en_core_web_sm")
+
+corpus_path = "C:/Users/NYUCM Loaner Access/Documents/GitHub/presupposition_dataset/corpus/parsed_0.05.conll"
 
 def check_cleft(sentence):
     tokens = list(sentence)
@@ -22,7 +26,6 @@ def check_cleft(sentence):
             cop = tokens[tokens_str.index(cleft_word) + 1]
             obj = None
             for child in cop.children:
-                #print(child.dep_,child.text)
                 if child.dep_ in ['attr','dobj']:
                     obj = child
                     break
@@ -35,20 +38,32 @@ def check_cleft(sentence):
     return False
 
 counter=0
-for line in coca1:
-    doc = nlp(line)
-    context_buffer = ["", ""]
-    for sentence in doc.sents:
-        if check_cleft(sentence):
-            counter += 1
-            print(counter)
-            cleft_dict = {"context1": context_buffer[0], "context2":context_buffer[1],"sentence": sentence.text.strip()}
-            cleft_file.write(str(cleft_dict) + "\n")
-            cleft_file.flush()
-        context_buffer.pop(0)
-        context_buffer.append(sentence.text.strip())
-    # counter+=1
-    # if counter > 1000:
-    #     break
+context_buffer = [(None, ""), (None, "")]
+prev_segment_name = ""
 
-cleft_file.close()
+#for sentence in doc.sents:
+for sentence, metadata in CoNLLReader(corpus_path):
+
+    # check if the segment changed and reset context buffer
+    if prev_segment_name != metadata["segment_id"]:
+        context_buffer = [(None, ""), (None, "")]
+        prev_segment_name = metadata["segment_id"]
+
+    if check_cleft(sentence):
+        counter += 1
+        print(counter)
+        cleft_dict = {"context1_speaker": context_buffer[0][0],
+                      "context1": str(context_buffer[0][1]),
+                      "context2_speaker": context_buffer[1][0],
+                      "context2": str(context_buffer[1][1]),
+                      "sentence": str(sentence),
+                      "speaker": metadata["speaker"]
+                      }
+        cleft_file_2.write(str(cleft_dict) + "\n")
+        cleft_file_2.flush()
+
+    # update context buffer
+    context_buffer.pop(0)
+    context_buffer.append((metadata["speaker"], sentence))
+
+cleft_file_2.close()

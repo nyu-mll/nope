@@ -23,9 +23,15 @@ class CoNLLReader(object):
     def __next__(self):
         with StringIO() as buffer:
             metadata = {}
+            initial = True
             for line in self.conll_file:
                 if line == "\n":
-                    break
+                    if initial:
+                        continue
+                    else:
+                        break
+
+                initial = False
 
                 if line[0] == "#":
                     key, val = line[2:].split("=", 1)

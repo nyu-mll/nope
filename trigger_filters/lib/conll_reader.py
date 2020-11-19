@@ -56,6 +56,9 @@ class CoNLLReader(object):
             print(d["token"])
             raise StopIteration
 
+        for token, lemma in zip(doc, d["lemma"]):
+            token.lemma_ = lemma
+
 
         for token, tag in zip(doc, d["xpos"]):
             token.tag_ = tag

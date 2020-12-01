@@ -6,7 +6,7 @@ import pandas as pd
 # import CoNLLReader class
 from lib.conll_reader import CoNLLReader
 
-comp_file = open("C:/Users/NYUCM Loaner Access/Documents/GitHub/presupposition_dataset/trigger_filters/outputs/comp.jsonl", "w")
+comp_file = open("C:/Users/NYUCM Loaner Access/Documents/GitHub/presupposition_dataset/trigger_filters/outputs/comp2.jsonl", "w")
 
 #initialize spacy processor
 nlp = spacy.load("en_core_web_sm")
@@ -36,7 +36,7 @@ def check_comparative(sentence):
         for word in adj.children:
             if str(word.text) in ["of"]:
                 for word2 in word.children:
-                    if word2.dep_ == "pobj":
+                    if word2.dep_ == "pobj" and word2.pos_ == 'NOUN':
                         nouns.append(word2)
         # noun for 'Clifford is bigger a dog than Cujo' --> causes index error right now
         # if tokens_str.index(str(adj)) + 1 <= len(tokens_str):
@@ -47,7 +47,7 @@ def check_comparative(sentence):
         #                 nouns.append(word3)
         # noun for 'Clifford is a bigger dog than Cujo'
         for word in adj.ancestors:
-            if word.dep_ == 'attr':
+            if word.dep_ == 'attr' and word.pos_ == 'NOUN':
                 nouns.append(word)
         for noun in nouns:  # check if the nouns have 'than' as a prepositional modifier
             for child in noun.children:
@@ -55,7 +55,8 @@ def check_comparative(sentence):
                     return True, adj.text, noun.text
     return False, None, None
 
-counter=0
+counter = 0
+parsed = 0
 context_buffer = [(None, ""), (None, "")]
 prev_segment_name = ""
 
@@ -84,6 +85,10 @@ for sentence, metadata in CoNLLReader(corpus_path):
     # update context buffer
     context_buffer.pop(0)
     context_buffer.append((metadata["speaker"], sentence))
+    
+    parsed += 1
+    if parsed % 1000 == 0:
+        print("%d sentences have been parsed" % parsed)
 
 comp_file.close()
 

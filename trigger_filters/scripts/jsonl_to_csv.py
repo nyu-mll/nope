@@ -4,6 +4,7 @@ import csv
 
 
 triggers = [
+            # "change_of_state",
             "clefts",
             "comparatives",
             "continuation_of_state",
@@ -16,7 +17,7 @@ triggers = [
 header = ["trigger", "context1_speaker", "context1", "context2_speaker", "context2", "sentence", "trigger_data", "speaker",
           "appropriate?", "negatable?", "negated_sentence", "presupposition",
           "Pr(H|C)", "Pr(H|C+P)", "Pr(H|C+~P)", "notes"]
-num_examples = 120
+num_examples = 150
 people = ["alex", "alicia", "omar", "sebastian", "soo-hwan", "zhuoye"]
 outputs = {}
 for p in people:
@@ -43,7 +44,10 @@ def standardize_dict(example, header, trigger):
 
 for trigger in triggers:
     input_f = f"../outputs/{trigger}.jsonl"
-    examples = [eval(line) for line in open(input_f)]
+    try:
+        examples = [eval(line) for line in open(input_f)]
+    except:
+        print(trigger)
     shuffle(examples)
     n = min(num_examples, len(examples))
     examples = [standardize_dict(e, header, trigger) for e in examples[:n]]

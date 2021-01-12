@@ -26,8 +26,10 @@ check_ids = unique(dat$sent_id[dat$original=="No"])
 
 dat2<-dat%>%
   filter(sent_id %in% check_ids)%>%
-  filter(!is.na(appropriate.))
+  filter(!is.na(appropriate.))%>%
+  filter(appropriate.!="")
 
+############################################################
 # check equivalency of metadata info
 dat3 <- dat2 %>%
   replace(is.na(.), "")%>%
@@ -35,14 +37,41 @@ dat3 <- dat2 %>%
   gather("Question","Response",-trigger,-sentence,-presupposition,-negated_sentence,-altered.sentence,-sent_id,-annotator,-original)%>%
   group_by(sent_id,Question)%>%
   mutate(count=n())%>%
-  ungroup()%>%
-  group_by(sent_id,Question)%>%
+  ungroup()
+
+original_annotators = dat2 %>%
+  filter(original=="Yes") %>%
+  select(sent_id,annotator)%>%
+  rename("original_annotator"=annotator)
+
+dat3.1 = merge(dat3,original_annotators)
+
+dat3.2 = dat3.1 %>%
+  group_by(sent_id,Question,original_annotator)%>%
   summarise(yes_rate=sum(Response=="Y")/mean(count))%>%
   mutate(agree_rate = ifelse(yes_rate == 1, 1,
-                             ifelse(yes_rate == 0, 1, 0)))%>%
+                             ifelse(yes_rate == 0, 1, 0)))
+
+dat3.3 = dat3.2 %>%
+  #group_by(Question,original_annotator)%>%
   group_by(Question)%>%
   summarise(agreement = mean(agree_rate))
 
+
+drop_nonagrees = dat3.2%>%
+  filter(Question=='appropriate.' & agree_rate == 1 & yes_rate ==1)
+appropriate_ids = unique(drop_nonagrees$sent_id)
+
+dat3.4 = dat3.2 %>%
+  filter(sent_id %in% appropriate_ids)%>%
+  #group_by(Question,original_annotator)%>%
+  group_by(Question)%>%
+  summarise(agreement = mean(agree_rate))
+
+
+
+#############################################################
+#reformat for manual checks
 dat4 = NULL
 for(i in 1:length(check_ids)){
   temp = dat2 %>%

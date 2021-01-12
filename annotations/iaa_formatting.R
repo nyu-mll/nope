@@ -1,6 +1,7 @@
 library(tidyr)
 library(dplyr)
 library(stringr)
+library(RColorBrewer)
 
 setwd("C:/Users/NYUCM Loaner Access/Documents/GitHub/presupposition_dataset/annotations")
 
@@ -47,11 +48,12 @@ original_annotators = dat2 %>%
 dat3.1 = merge(dat3,original_annotators)
 
 dat3.2 = dat3.1 %>%
-  group_by(sent_id,Question,original_annotator)%>%
+  group_by(sent_id,Question,original_annotator,trigger)%>%
   summarise(yes_rate=sum(Response=="Y")/mean(count))%>%
   mutate(agree_rate = ifelse(yes_rate == 1, 1,
                              ifelse(yes_rate == 0, 1, 0)))
 
+# get all agreement rates aggregated
 dat3.3 = dat3.2 %>%
   #group_by(Question,original_annotator)%>%
   group_by(Question)%>%
@@ -62,12 +64,26 @@ drop_nonagrees = dat3.2%>%
   filter(Question=='appropriate.' & agree_rate == 1 & yes_rate ==1)
 appropriate_ids = unique(drop_nonagrees$sent_id)
 
+# check 'negatable' within cases where all 3 annotators agree the example is appropriate
 dat3.4 = dat3.2 %>%
   filter(sent_id %in% appropriate_ids)%>%
   #group_by(Question,original_annotator)%>%
   group_by(Question)%>%
   summarise(agreement = mean(agree_rate))
 
+# get agreement rates for each type of sentence
+dat3.5 = dat3.2 %>%
+  filter(Question=='appropriate.' | Question=='negatable.' | Question=='small.edits')%>%
+  group_by(Question,trigger)%>%
+  summarise(agreement = mean(agree_rate))
+
+cols = brewer.pal(8,"Accent")
+
+(plt3.5 = ggplot(data=dat3.5, aes(x=trigger,y=agreement,fill=Question))+
+  geom_bar(stat='identity',position=position_dodge())+
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
+  scale_y_continuous(breaks = c(0,0.25,0.5,0.75,1),limits = c(0,1))+
+  scale_fill_manual(values = c(cols[1],cols[3],cols[8])))
 
 
 #############################################################
@@ -75,13 +91,13 @@ dat3.4 = dat3.2 %>%
 dat4 = NULL
 for(i in 1:length(check_ids)){
   temp = dat2 %>%
-    select(sent_id,annotator,original,sentence,altered.sentence,appropriate.,negatable.,negated_sentence,presupposition)
+    select(sent_id,trigger,annotator,original,sentence,altered.sentence,appropriate.,negatable.,negated_sentence,presupposition)
   temp2 = temp %>%
     filter(sent_id == check_ids[i])
   original = filter(temp2, original=="Yes")
   non_original = temp2 %>%
     filter(original == "No")%>%
-    select(-sent_id,-original,-sentence)
+    select(-sent_id,-original,-sentence,-trigger)
   non_original_1 = non_original[1,]
   colnames(non_original_1) <- paste(colnames(non_original_1), "1", sep = "_")
   if(nrow(non_original)==2){
@@ -103,4 +119,14 @@ dat5 <- dat4 %>%
   mutate(agree_negatable = ifelse(negatable.==negatable._1 & !is.na(negatable._2) & negatable. == negatable._2, 1, 
                                     ifelse(negatable.==negatable._1 & is.na(negatable._2), 1, 0)))
 
-write.csv(dat5,"manual_checks.csv")
+dat6 <- dat5 %>%
+  mutate(exact_negated = ifelse(sub("n't", " not", negated_sentence) == sub("n't", " not", negated_sentence_1) & 
+                                sub("n't", " not", negated_sentence) == sub("n't", " not", negated_sentence_2) &
+                                agree_appropriate==1 & appropriate. == "Y" & agree_negatable ==1 & negatable.=="Y", 
+                                1, 0))%>%
+  mutate(exact_presup = ifelse(presupposition == presupposition_1 & 
+                               presupposition == presupposition_2 &
+                               agree_appropriate==1 & appropriate. == "Y" & agree_negatable ==1 & negatable.=="Y", 
+                               1, 0))
+
+write.csv(dat6,"manual_checks.csv")

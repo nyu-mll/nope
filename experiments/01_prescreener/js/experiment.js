@@ -24,6 +24,7 @@ function make_slides(f) {
   slides.practice_1 = slide({
     name: "practice_1",
     start: function() {
+      this.correct_answer = false;
       utils.make_slider("#practice_1-slider", function() {
         var changed_val = !$("#practice_1-slider .ui-slider-handle").is(":hidden");
         if (!changed_val) {
@@ -35,9 +36,14 @@ function make_slides(f) {
         $("#practice_1-slider-val").text(transformed_val);
       });
       $(".err").hide();
+      $(".correct").hide();
       $("#practice_1-slider-val").text("--");
     },
     button: function() {
+      if (this.correct_answer) {
+        exp.go();
+        return;
+      }
       $(".err").hide();
       this.log_responses();
       var changed_val = !$("#practice_1-slider .ui-slider-handle").is(":hidden");
@@ -46,7 +52,8 @@ function make_slides(f) {
       } else if (parseFloat($("#practice_1-slider-val").text()) < 99.0) {
         $("#practice_1 .incorrect-val-err").show();
       } else {
-        exp.go(); //TODO
+        $("#practice_1 .correct").show();
+        this.correct_answer = true;
       }
     },
     log_responses: function() {
@@ -63,6 +70,7 @@ function make_slides(f) {
   slides.practice_2 = slide({
     name: "practice_2",
     start: function() {
+      this.correct_answer = false;
       utils.make_slider("#practice_2-slider", function() {
         var changed_val = !$("#practice_2-slider .ui-slider-handle").is(":hidden");
         if (!changed_val) {
@@ -74,9 +82,14 @@ function make_slides(f) {
         $("#practice_2-slider-val").text(transformed_val);
       });
       $(".err").hide();
+      $(".correct").hide();
       $("#practice_2-slider-val").text("--");
     },
     button: function() {
+      if (this.correct_answer) {
+        exp.go();
+        return;
+      }
       $(".err").hide();
       this.log_responses();
       var changed_val = !$("#practice_2-slider .ui-slider-handle").is(":hidden");
@@ -87,7 +100,8 @@ function make_slides(f) {
       } else if (parseFloat($("#practice_2-slider-val").text()) == 0.0) {
         $("#practice_2 .incorrect-val-err2").show();
       } else {
-        exp.go(); //TODO
+        $("#practice_2 .correct").show();
+        this.correct_answer = true;
       }
     },
     log_responses: function() {
@@ -104,6 +118,7 @@ function make_slides(f) {
   slides.practice_3 = slide({
     name: "practice_3",
     start: function() {
+      this.correct_answer = false;
       utils.make_slider("#practice_3-slider", function() {
         var changed_val = !$("#practice_3-slider .ui-slider-handle").is(":hidden");
         if (!changed_val) {
@@ -115,9 +130,14 @@ function make_slides(f) {
         $("#practice_3-slider-val").text(transformed_val);
       });
       $(".err").hide();
+      $(".correct").hide();
       $("#practice_3-slider-val").text("--");
     },
     button: function() {
+      if (this.correct_answer) {
+        exp.go();
+        return;
+      }
       $(".err").hide();
       this.log_responses();
       var changed_val = !$("#practice_3-slider .ui-slider-handle").is(":hidden");
@@ -128,7 +148,8 @@ function make_slides(f) {
       } else if (parseFloat($("#practice_3-slider-val").text()) == 0.0) {
         $("#practice_3 .incorrect-val-err2").show();
       } else {
-        exp.go(); //TODO
+        $("#practice_3 .correct").show();
+        this.correct_answer = true;
       }
     },
     log_responses: function() {

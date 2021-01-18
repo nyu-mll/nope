@@ -58,7 +58,7 @@ var utils = {
 			range : "min",
 			min : 0,
 			max : 1,
-			step: 0.01,
+			step: 0.001,
 			value : 0.5,
 			slide : response_callback,
 			change : response_callback,

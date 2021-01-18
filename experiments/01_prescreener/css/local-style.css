@@ -132,3 +132,7 @@ td:nth-child(3) {
 .slide {
 	border: 1px solid #666;
 }
+
+.err {
+	color: red;
+}

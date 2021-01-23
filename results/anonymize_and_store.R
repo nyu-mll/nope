@@ -7,7 +7,7 @@ setwd("C:/Users/NYUCM Loaner Access/Documents/GitHub/presupposition_dataset/resu
 anon_ids = read.csv("C:/Users/NYUCM Loaner Access/Documents/GitHub/SECRET/presup_dataset_SECRET/anon_id_links.csv")
 
 SECRET_dir = "C:/Users/NYUCM Loaner Access/Documents/GitHub/SECRET/presup_dataset_SECRET/mturk_data/"
-this_run = "01_prescreener_2"
+this_run = "01_prescreener_3"
 
 read_json <- function(file){
   con <- file(file, open = "r")

@@ -11,11 +11,13 @@ dat2 <- dat %>%
   filter(!id %in% remove_practice)%>%
   mutate(response2 = as.numeric(as.character(response)))
 
-plt <- ggplot(data = dat2, aes(x = Answer.condition, y = response2))+
-  geom_point()+
+
+
+plt <- ggplot(data = dat2, aes(x = id, y = response2))+
+  geom_jitter(width=0.2,height=0,alpha=0.6,size=2)+
   geom_boxplot(position=position_dodge(),alpha=0)+
   ggtitle(paste0("Prescreener, n = ",length(unique(dat2$anon_id))))+
+  theme(plot.title = element_text(hjust = 0.5))+
   xlab("Context condition")+
-  ylab("Response")+
-  facet_wrap(~id)
+  ylab("Response")
 plt

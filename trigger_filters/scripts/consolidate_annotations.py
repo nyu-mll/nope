@@ -2,7 +2,7 @@ import csv
 import os
 import matplotlib.pyplot as plt
 
-annotations_dir = "../annotation"
+annotations_dir = "../annotation/round2"
 
 data = []
 for file in os.listdir(annotations_dir):
@@ -13,8 +13,9 @@ for file in os.listdir(annotations_dir):
             e["annotator"] = annotator
         data.extend(examples)
 
-annotated_data = [d for d in data if d["appropriate? (Y/N)"] != ""]
-appropriate_data = [d for d in data if d["appropriate? (Y/N)"] == "Y" and d["negatable? (Y/N)"] == "Y"]
+annotated_data = [d for d in data if d["appropriate?"] != ""]
+not_annotated_data = [d for d in data if d["appropriate?"] == ""]
+appropriate_data = [d for d in data if d["appropriate?"] == "Y" and d["negatable?"] == "Y"]
 triggers = list(set([e["trigger"] for e in data]))
 
 def proprtion_of_appropriate_examples():
@@ -22,7 +23,7 @@ def proprtion_of_appropriate_examples():
     data = annotated_data
     triggers = list(set([e["trigger"] for e in data]))
     triggers.sort()
-    appropriate_data = [d for d in data if d["appropriate? (Y/N)"] == "Y" and d["negatable? (Y/N)"] == "Y"]
+    appropriate_data = [d for d in data if d["appropriate?"] == "Y" and d["negatable?"] == "Y"]
     proportions = []
     for t in triggers:
         n_annotated = len([d for d in data if d["trigger"] == t])
@@ -42,21 +43,27 @@ def amount_of_appropriate_examples():
     data = annotated_data
     triggers = list(set([e["trigger"] for e in data]))
     triggers.sort()
-    appropriate_data = [d for d in data if d["appropriate? (Y/N)"] == "Y" and d["negatable? (Y/N)"] == "Y"]
+    appropriate_data = [d for d in data if d["appropriate?"] == "Y" and d["negatable?"] == "Y"]
     inappropriate = []
     appropriate = []
+    not_annotated = []
+    annotated = []
     for t in triggers:
         n_annotated = len([d for d in data if d["trigger"] == t])
         n_appropriate = len([d for d in appropriate_data if d["trigger"] == t])
+        n_not_annotated = len([d for d in not_annotated_data if d["trigger"] == t])
+        annotated.append(n_annotated)
         appropriate.append(n_appropriate)
         inappropriate.append(n_annotated - n_appropriate)
+        not_annotated.append(n_not_annotated)
 
     x_pos = list(range(len(triggers)))
     plt.bar(x_pos, appropriate)
     plt.bar(x_pos, inappropriate, bottom=appropriate)
+    plt.bar(x_pos, not_annotated, bottom=annotated)
     plt.xticks(x_pos, triggers, rotation=30, ha='right')
     plt.ylabel("Number of examples")
-    plt.legend(["appropriate", "inappropriate"])
+    plt.legend(["appropriate", "inappropriate", "not annotated"])
     plt.show()
 
 

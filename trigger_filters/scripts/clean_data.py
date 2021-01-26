@@ -60,7 +60,17 @@ for col in text_columns:
     annotations[col] = annotations[col].apply(clean)
 
 annotations = annotations.drop("Unnamed: 24", axis="columns")
-annotations = annotations[annotations["appropriate?"].str.contains("Y") & annotations["negatable?"].str.contains("Y")]
+
+
+def example_is_appropriate(example):
+    return "Y" == example["appropriate?"] and \
+           "Y" == example["negatable?"] and \
+           example["negated_sentence"] != "" and \
+           example["presupposition"] != ""
+
+
+
+annotations = annotations[annotations.apply(example_is_appropriate, axis="columns")]
 annotations["target"] = True
 
 output_path = "../../experiments/stimuli/all_annotations_cleaned.jsonl"

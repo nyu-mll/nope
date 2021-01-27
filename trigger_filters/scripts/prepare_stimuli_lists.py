@@ -50,14 +50,16 @@ def main():
         filler["type"] = "filler"
 
     random.shuffle(fillers)
-
-    for i in range(int(len(target_examples)/LIST_SIZE)):
-        fname = os.path.join(args.out_dir, f"stimuli_list_{i}.js")
-        with open(fname, "w") as out_f:
-            stimuli_list = target_examples[(i * LIST_SIZE):((i+1) * LIST_SIZE)]
-            stimuli_list.extend(fillers[(i * FILLERS_PER_LIST):((i+1) * FILLERS_PER_LIST)])
-            json_str = json.dumps(stimuli_list)
-            print(f"var all_stims = {json_str};", file=out_f)
+    
+    fname = os.path.join(args.out_dir, "stimuli.js")
+    
+    with open(fname, "w") as out_f:
+      print("var stims = [];", file=out_f)
+      for i in range(int(len(target_examples)/LIST_SIZE)):
+        stimuli_list = target_examples[(i * LIST_SIZE):((i+1) * LIST_SIZE)]
+        stimuli_list.extend(fillers[(i * FILLERS_PER_LIST):((i+1) * FILLERS_PER_LIST)])
+        json_str = json.dumps(stimuli_list)
+        print(f"stims[{i}] = {json_str};", file=out_f)
 
 
 if __name__ == '__main__':

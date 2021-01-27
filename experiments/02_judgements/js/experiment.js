@@ -1,4 +1,15 @@
-var LIST = _.sample([0,1,2])
+function getURLParameter(name, def) {
+		return decodeURIComponent(
+				(RegExp(name + '=' + '(.+?)(&|$)').exec(location.search)||["", def])[1]
+		);
+}
+
+
+
+var LIST = parseInt(getURLParameter("list", "0"));
+var stim_set = parseInt(getURLParameter("stims", "0"));
+
+var all_stims = stims[stim_set];
 
 
 // set up experiment logic for each slide

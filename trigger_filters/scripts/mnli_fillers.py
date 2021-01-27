@@ -15,7 +15,7 @@ fillers = []
 for line in sample:
     fillers.append({
         "premise": line["sentence1"],
-        "hypothesis": line["sentence1"],
+        "hypothesis": line["sentence2"],
         "expected_response": int(line["gold_label"] == "entailment"),
         "target": False,
         "sent_id": line["pairID"] + "_filler"

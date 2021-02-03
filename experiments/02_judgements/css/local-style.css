@@ -133,7 +133,7 @@ td:nth-child(3) {
 	border: 1px solid #666;
 }
 
-.err {
+.err, .reason-err {
 	color: red;
 }
 
@@ -145,4 +145,12 @@ h6 {
 	margin: 5px 0;
 	font-size: 16px;
 
+}
+
+
+#reason-container textarea {
+	border: 1px solid #000;
+	width: 350px;
+	margin: 10px 0 0;
+	height: 50px;
 }

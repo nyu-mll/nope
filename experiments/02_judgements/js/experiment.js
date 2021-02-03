@@ -199,6 +199,9 @@ function make_slides(f) {
      present_handle : function(stim) {
 
        $("#trial-confusing").prop("checked", false);
+			 $("#trial-confusing-reason").val("");
+			 $("#reason-container").hide();
+			 $(".reason-err").hide();
 
       // store stimulus data
       this.stim = stim;
@@ -296,10 +299,17 @@ function make_slides(f) {
     // handle click on "Continue" button
     button: function() {
       var changed_val = !$("#trial-slider .ui-slider-handle").is(":hidden");
+			$('.err').hide();
+			$(".reason-err").hide();
 
       if (changed_val) {
-        this.log_responses();
-         _stream.apply(this);
+				var confusing = $("#trial-confusing").is(":checked");
+				if (!confusing || $("#trial-confusing-reason").val().length > 3) {
+        	this.log_responses();
+         	_stream.apply(this);
+				} else {
+					$(".reason-err").show();
+				}
       } else {
         $('.err').show();
       }
@@ -316,6 +326,7 @@ function make_slides(f) {
         "trial": exp.phase, //exp.phase is a built-in trial number tracker
         "response": $("#slider-val").text(),
         "confusing": $("#trial-confusing").is(":checked") ? 1 : 0,
+				"confusing_reason": $("#trial-confusing-reason").val(),
         "type": type
       });
     },
@@ -326,12 +337,8 @@ function make_slides(f) {
     name: "subj_info",
     submit: function(e) {
       exp.subj_data = {
-        language: $("#language").val(),
         enjoyment: $("#enjoyment").val(),
         asses: $('input[name="assess"]:checked').val(),
-        age: $("#age").val(),
-        gender: $("#gender").val(),
-        education: $("#education").val(),
         fairprice: $("#fairprice").val(),
         comments: $("#comments").val()
       };
@@ -345,7 +352,6 @@ function make_slides(f) {
     start: function() {
       exp.data = {
         "trials": exp.data_trials,
-        "catch_trials": exp.catch_trials,
         "system": exp.system,
         "condition": exp.condition,
         "subject_information": exp.subj_data,
@@ -384,13 +390,13 @@ function init() {
   //blocks of the experiment:
   exp.structure = [
     "i0",
-    "startExp",
-    "practice_1",
-    "practice_2",
-    "practice_3",
+    //"startExp",
+    //"practice_1",
+    //"practice_2",
+    //"practice_3",
     "intermission",
     "trial",
-    "subj_info",
+		"subj_info",
     "thanks"
   ];
 
@@ -408,6 +414,14 @@ function init() {
   $("#start_button").click(function() {
     exp.go();
   });
+
+	$("#trial-confusing").change(function() {
+		if ($(this).is(":checked")) {
+			$("#reason-container").show();
+		} else {
+			$("#reason-container").hide();
+		}
+	})
 
   exp.go(); //show first slide
 }

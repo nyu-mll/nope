@@ -40,7 +40,7 @@
       <p class="left">
         You will read some sentences from transcriptions of conversations and written articles. <strong>Your task is to answer a question about what you read to the best of your ability.</strong><br>
         <br>
-        The HIT will take approximately XXX minutes.
+        The HIT will take approximately 9 minutes.
       </p><button id="start_button" type="button">Start experiment</button>
       <p class="left legal">
         <strong><br>
@@ -49,7 +49,7 @@
         LEGAL INFORMATION</strong>:<br>
         <br>
         By completing this survey you acknowledge that this is an academic survey conducted by NYU
-        researchers studying language. The survey is expected to take up to 5 minutes.
+        researchers studying language. The survey is expected to take up to 9 minutes.
         Information that could be used to identify you may be kept indefinitely, but will remain
         confidential. Because of the nature of the study, the information we are collecting cannot be
         deleted or otherwise forgotten and we may not be able to provide you with it. You will be paid if
@@ -255,14 +255,16 @@
     </div>
 
     <div class="slide" id="intermission">
+      <div style="float: left;"><a href="https://docs.google.com/document/d/15k5q7I3FP-4zvdgJhmC-V1f-YUNJLtUrIZdlKWaTVfU/" target="_blank">FAQ</a></div>
       <h3>Instructions</h3>
-      <p>Great! Now we can start the real task. You will now read 25 short texts.
-      Your task is again to indicate how likely you think the statement is to be true,
+      <p>
+      Your task is to read a few lines from 25 unfamiliar texts, each followed by a statement. Indicate how likely you think the statement is to be true,
       using the information in the text and your background knowledge about how the world works.</p>
-      <p>Sometimes, the text or the statement might sound strange. In this case, give a rating to the best of your ability, but also click the checkbox next to "The text is confusing or doesn't make any sense".</p>
+      <p>Sometimes, the text or the statement might sound strange. In this case, give a rating to the best of your ability, but also click the checkbox next to "The text is confusing" and tell us why it is confusing.</p>
 
       <p>Also, in some cases there will be only a statment but no text. In this case, please also give a rating to the best of your ability given what you know.</p>
 
+      <p>If you are unsure about what to do, you can anytime click on the "FAQ" link in the upper left corner to look at the answers to common questions.</p>
       <div class="center">
         <button class="continueButton" onclick="_s.button()">Continue</button>
       </div>
@@ -271,6 +273,7 @@
 
     <!-- trial slide -->
     <div class="slide" id="trial">
+      <div style="float: left;"><a href="https://docs.google.com/document/d/15k5q7I3FP-4zvdgJhmC-V1f-YUNJLtUrIZdlKWaTVfU/" target="_blank">FAQ</a></div>
 
       <div class="instruction center"><i>Please read the following text:</i></div>
       <!-- placeholders for stimuli -->
@@ -302,7 +305,12 @@
 
       <br>
       <div class="center">
-        <label><input type="checkbox" value="yes" name="" id="trial-confusing"> The text is confusing or doesn't make any sense.</label>
+        <label><input type="checkbox" value="yes" name="" id="trial-confusing"> The text is confusing.</label>
+      </div>
+      <div id="reason-container">
+        <p>Please tell use why the text is confusing:<br>
+        <textarea id="trial-confusing-reason"></textarea></p>
+        <p class="reason-err">Please describe why you find the text confusing.</p>
       </div>
       <br>
       <div class="center">
@@ -328,48 +336,6 @@
         <p>
           Did you read the instructions and do you think you did the HIT correctly?
         </p><label><input type="radio" name="assess" value="No">No</label> <label><input type="radio" name="assess" value="Yes">Yes</label> <label><input type="radio" name="assess" value="Confused">I was confused</label>
-        <p>
-          Gender: <select id="gender">
-            <option value="">
-            </option>
-            <option value="Male">
-              male
-            </option>
-            <option value="Female">
-              female
-            </option>
-            <option value="Other">
-              other
-            </option>
-          </select>
-        </p>
-        <p>
-          Age: <input type="text" id="age">
-        </p>
-        <p>
-          Level of education: <select id="education">
-            <option value="-1">
-            </option>
-            <option value="0">
-              Some high school
-            </option>
-            <option value="1">
-              Graduated high school
-            </option>
-            <option value="2">
-              Some college
-            </option>
-            <option value="3">
-              Graduated college
-            </option>
-            <option value="4">
-              Hold a higher degree
-            </option>
-          </select>
-        </p>
-        <p>
-          Native language: <input type="text" id="language">
-        </p><label>(the language(s) spoken at home when you were a child)</label>
         <p>
           Do you think the payment was fair?
         </p><select id="fairprice">

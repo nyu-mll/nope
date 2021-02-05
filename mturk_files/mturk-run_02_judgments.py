@@ -129,6 +129,23 @@ for i in range(10):
 # save files
 for i in range(10):
     results, result_types = get_results(HITIds[i])
-    outname = "C:/Users/NYUCM Loaner Access/Documents/GitHub/SECRET/presup_dataset_SECRET/mturk_data/02_judgments_" + str(i) + "_group0.json"
+    outname = "C:/Users/NYUCM Loaner Access/Documents/GitHub/SECRET/presup_dataset_SECRET/mturk_data/02_judgments/02_judgments_" + str(i) + "_group0.json"
     with io.open(outname, "w") as outfile:
         outfile.write(json.dumps(results))
+
+# ---------------------------------------------------------
+# approve_assignments
+
+#already_approved = []
+for j in range(len(HITIds)):
+    this_HITId = HITIds[j]
+    if client.list_assignments_for_hit(HITId=this_HITId, MaxResults=50)['NumResults'] > 0:
+        for i in range(client.list_assignments_for_hit(HITId=this_HITId, MaxResults=50)['NumResults']):
+            ass_id = client.list_assignments_for_hit(HITId=this_HITId, MaxResults=50)['Assignments'][i]['AssignmentId']
+            if ass_id not in already_approved:
+                approval = client.approve_assignment(
+                    AssignmentId=ass_id
+                )
+                already_approved.append(ass_id)
+                print("approved assignment for %s" % client.list_assignments_for_hit(HITId=this_HITId, MaxResults=50)['Assignments'][i]['WorkerId'])
+print("Approved %d total assignments" % len(already_approved))

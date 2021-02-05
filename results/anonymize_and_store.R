@@ -21,7 +21,14 @@ anonymize = function(dat,anons){
   return(dat3)
 }
 
-dat<-read_json(paste0(SECRET_dir,this_run,".json"))
+######################################################
+#
+# PRESCREENER
+#
+######################################################
+
+this_run = "01_prescreener_3"
+dat<-read_json(paste0(SECRET_dir,"01_prescreener/",this_run,".json"))
 
 trials = dat[[1]][[1]]
 subj_info = dat[[5]][[1]]
@@ -47,3 +54,30 @@ new_subj_info = rbind(old_subj_info,anon_subj_info)
 
 write.csv(new_trials,"01_prescreener/trials.csv", row.names=FALSE)
 write.csv(new_subj_info,"01_prescreener/subj_info.csv", row.names=FALSE)
+
+######################################################
+#
+# 02_JUDGMENTS
+#
+######################################################
+
+this_run = "02_judgments"
+files = list.files(paste0(SECRET_dir,this_run),pattern = "*.json", full.names = T)
+
+trials = NULL
+subj_info = NULL
+for(i in 1:length(files)){
+  temp = read_json(files[i])
+  if(length(temp) > 2){
+    trials_temp = temp[['trials']][[1]]
+    trials = rbind(trials,trials_temp)
+    subj_info_temp = temp[['subject_information']][[1]]
+    subj_info = rbind(subj_info,subj_info_temp)
+  }
+}
+
+anon_trials = anonymize(trials,anon_ids)
+anon_subj_info = anonymize(subj_info,anon_ids)
+
+write.csv(anon_trials,"02_judgments/trials.csv", row.names=FALSE)
+write.csv(anon_subj_info,"02_judgments/subj_info.csv", row.names=FALSE)

@@ -25,17 +25,16 @@ flag = T
 
 clean_dat = dat2
 
+too_fast = unique(clean_dat$anon_id[clean_dat$Answer.time_in_minutes < 4.3])
+to_remove = c(to_remove,too_fast)
+
 # iteratively remove participants who are >2 sd outside of range on 3+ items
 while(flag == T){
   clean_dat = clean_dat %>%
     filter(!anon_id %in% to_remove)%>%
-    #filter(Answer.time_in_minutes > 4)%>% # just assume no one actually did this in under 4 min
     group_by(id)%>%
-    #mutate(mean_rating = mean(response2),
-    #          sd_rating = sd(response2))%>%
-    #ungroup()%>%
-    mutate(in_range_1sd = case_when(response2 > mean(response2)+sd(response2) | response2 < mean(response2)-sd(response2) ~ 0,
-                                    response2 < mean(response2)+sd(response2) & response2 > mean(response2)-sd(response2) ~ 1,
+    mutate(in_range_1sd = case_when(response2 > mean(response2)+1.5*sd(response2) | response2 < mean(response2)-1.5*sd(response2) ~ 0,
+                                    response2 < mean(response2)+1.5*sd(response2) & response2 > mean(response2)-1.5*sd(response2) ~ 1,
     ))%>%
     mutate(in_range_2sd = case_when(response2 > mean(response2)+2*sd(response2) | response2 < mean(response2)-2*sd(response2) ~ 0,
                                     response2 < mean(response2)+2*sd(response2) & response2 > mean(response2)-2*sd(response2) ~ 1,
@@ -49,11 +48,15 @@ while(flag == T){
     print(new_remove)
     print("")
     to_remove = c(to_remove,new_remove)
-  } else {
+  } else { # stop loop when list stabilizes
+    flag = F
+  }
+  if(NA %in% new_remove){ # stop loop if there's some failure
     flag = F
   }
 }
 
+print(length(to_remove))
 print(to_remove)
 
 table(clean_dat$in_range_2sd,clean_dat$id)

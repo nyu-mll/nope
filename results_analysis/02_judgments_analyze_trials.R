@@ -32,9 +32,9 @@ dat4 <- merge(dat3,stims,by="id")
 
 plt2 = ggplot(data=dat4, aes(x=type,y=mean_resp,col=type))+
   geom_jitter()+
-  geom_boxplot(alpha=0.1)+
+  geom_boxplot(alpha=0)+
   facet_wrap(~trigger)+
-  ggtitle("Judgments pilot, partial data with 33 responses")+
+  ggtitle("Judgments pilot, partial data with 51 responses")+
   theme(plot.title = element_text(hjust = 0.5),
         axis.title.x=element_blank(),
         axis.text.x=element_blank(),

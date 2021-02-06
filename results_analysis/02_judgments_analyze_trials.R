@@ -4,7 +4,7 @@ library(stringr)
 this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
 setwd(this.dir)
 
-dat = read.csv("./02_judgments/trials.csv")
+dat = read.csv("../results/02_judgments/trials.csv")
 
 stims = read.csv("../experiments/stimuli/all_annotations_cleaned.csv")
 stims = stims %>% select(sent_id,trigger) %>% rename("id" = sent_id)

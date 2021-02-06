@@ -9,7 +9,7 @@ setwd(this.dir)
 #
 ######################################################
 
-dat = read.csv("./01_prescreener/subj_info.csv")
+dat = read.csv("../results/01_prescreener/subj_info.csv")
 
 dat2 = dat %>%
   gather("Question","Value", -anon_id)
@@ -30,8 +30,8 @@ plt
 #
 ######################################################
 
-trials = read.csv("./02_judgments/trials.csv")
-subj_info = read.csv("./02_judgments/subj_info.csv")
+trials = read.csv("../results/02_judgments/trials.csv")
+subj_info = read.csv("../results/02_judgments/subj_info.csv")
 
 # check times
 min(trials$Answer.time_in_minutes)

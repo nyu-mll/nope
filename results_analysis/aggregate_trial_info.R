@@ -4,7 +4,7 @@ this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
 setwd(this.dir)
 
 
-dat = read.csv("./01_prescreener/trials.csv")
+dat = read.csv("../results/01_prescreener/trials.csv")
 
 remove_practice = c("practice_1","practice_2","practice_3")
 

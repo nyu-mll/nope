@@ -79,5 +79,8 @@ for(i in 1:length(files)){
 anon_trials = anonymize(trials,anon_ids)
 anon_subj_info = anonymize(subj_info,anon_ids)
 
+# This participant put their worker id in the comments box for some reason
+anon_subj_info$comments[anon_subj_info$anon_id=='18'] = NA  
+
 write.csv(anon_trials,"02_judgments/trials.csv", row.names=FALSE)
 write.csv(anon_subj_info,"02_judgments/subj_info.csv", row.names=FALSE)

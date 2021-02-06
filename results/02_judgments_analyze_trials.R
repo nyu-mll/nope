@@ -34,8 +34,11 @@ plt2 = ggplot(data=dat4, aes(x=type,y=mean_resp,col=type))+
   geom_jitter()+
   geom_boxplot(alpha=0.1)+
   facet_wrap(~trigger)+
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
-  ggtitle("Judgments pilot, partial data with 15 responses")+
-  theme(plot.title = element_text(hjust = 0.5))
+  ggtitle("Judgments pilot, partial data with 33 responses")+
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        legend.position = c(0.9, 0.2))
 plt2
   

@@ -5,6 +5,8 @@ import json, argparse, os, csv
 import xmltodict
 import io
 import mturk_utils
+import datetime
+from pytz import timezone
 
 avp_secrets = pd.read_csv("C:/Users/NYUCM Loaner Access/Documents/GitHub/SECRET/access_keys_avp.csv")
 cds_secrets = pd.read_csv("C:/Users/NYUCM Loaner Access/Documents/GitHub/SECRET/access_keys_cds.csv")
@@ -79,7 +81,7 @@ for i in range(10):
         </ExternalQuestion>
         """.format(this_exp, framehight)
 
-    create = client.create_hit(
+    #create = client.create_hit(
         MaxAssignments=5,
         AutoApprovalDelayInSeconds=259200,  # 3 days
         LifetimeInSeconds=259200,  # 3 days
@@ -100,10 +102,15 @@ for i in range(10):
 #---------------------------------------------------------
 # message workers
 
-message_title = "You qualified for our HITs"
-message = "Congratulations! You qualified to complete more HITs in our current series on sentence judgments. " \
-          "We have just released small number of HITs with the title 'Judge sentence likelihood (10 min)' " \
-          "as a pilot, and we will be releasing larger batches in the coming weeks."
+message_title = "HITs still available -- no limit on how many you can complete"
+message = "We are following up on our message from yesterday about a small batch of HITs titled " \
+          "'Judge sentence likelihood (10min)'. There are still many HITs in this initial batch available, " \
+          "and there is no limit on the number that you can complete! "
+
+# message_title = "You qualified for our HITs"
+# message = "Congratulations! You qualified to complete more HITs in our current series on sentence judgments. " \
+#           "We have just released small number of HITs with the title 'Judge sentence likelihood (10 min)' " \
+#           "as a pilot, and we will be releasing larger batches in the coming weeks."
 
 # message_title = "HITs still available -- new bonus attached!"
 # message = "We are following up on our message from yesterday about a small batch of HITs titled " \
@@ -117,7 +124,7 @@ message = "Congratulations! You qualified to complete more HITs in our current s
 # response = client.notify_workers(
 #         Subject=message_title,
 #         MessageText=message,
-#         WorkerIds=group2_workers
+#         WorkerIds=workers
 # )
     
 #---------------------------------------------------------
@@ -176,11 +183,49 @@ for j in range(len(HITIds)):
                 )
                 already_approved.append(ass_id)
                 print("approved assignment for %s" % client.list_assignments_for_hit(HITId=this_HITId, MaxResults=50)['Assignments'][i]['WorkerId'])
-                if group == 'group0':
-                    g0_assignments.append(ass_id)
 print("Approved %d total assignments" % len(already_approved))
 
+# ---------------------------------------------------------
+# extend time of HITs
+tz = timezone('EST')
+
+for idd in HITIds_2:
+    response = client.update_expiration_for_hit(
+        HITId=idd,
+        ExpireAt=datetime.datetime(2021, 2, 8, 23, 45, 15, tzinfo=tz)
+    )
 
 # ---------------------------------------------------------
-# pay bonuses for group0 
+# pay bonuses for group0
+#already_paid = []
+
+need_bonus = []
+for i in range(10):
+    for j in range(client.list_assignments_for_hit(HITId=HITIds_0[i], MaxResults=50)['NumResults']):
+        ass_id = client.list_assignments_for_hit(HITId=HITIds_0[i], MaxResults=50)['Assignments'][j]['AssignmentId']
+        w_id = client.list_assignments_for_hit(HITId=HITIds_0[i], MaxResults=50)['Assignments'][j]['WorkerId']
+        if ass_id not in already_paid:
+            need_bonus.append([ass_id,w_id])
+
+bonuses = pd.DataFrame (need_bonus,columns=['ass_id','worker_id'])
+bonuses2 = bonuses.assign(
+    uniqueID = lambda dataframe: dataframe['ass_id'].map(lambda id: id+"_Bonus")
+)
+
+#store request ids
+data = []
+
+for i in range(len(bonuses2)):  # skip index 0 because used as test already
+    response = client.send_bonus(
+        WorkerId=bonuses2['worker_id'][i],
+        BonusAmount=str(0.5),
+        AssignmentId=bonuses2['ass_id'][i],
+        Reason="Adjustment for the HIT taking longer than we'd expected.",
+        UniqueRequestToken=bonuses2['uniqueID'][i]
+    )
+    data.append([bonuses2['uniqueID'][i], response['ResponseMetadata']['RequestId']])
+    already_paid.append(bonuses2['ass_id'][i])
+    
+df = pd.DataFrame(data, columns = ["uniqueId", "RequestId"])
+df.to_csv("C:/Users/NYUCM Loaner Access/Documents/GitHub/SECRET/presup_dataset_SECRET/02_judgments_bonus_payment_requestIds_2.csv")
 

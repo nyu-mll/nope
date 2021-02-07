@@ -36,7 +36,7 @@ subj_info = read.csv("../results/02_judgments/subj_info.csv")
 # check times
 min(trials$Answer.time_in_minutes)
 max(trials$Answer.time_in_minutes)
-mean(trials$Answer.time_in_minutes)
+mean(trials$Answer.time_in_minutes[trials$Answer.time_in_minutes<30])
 median(trials$Answer.time_in_minutes)
 sort(unique(trials$Answer.time_in_minutes))
 

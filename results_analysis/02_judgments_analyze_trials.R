@@ -17,9 +17,11 @@ dat2 <- dat %>%
   mutate(expected_resp = case_when(str_detect(id, "e_filler") ~ "entailment",
                                    str_detect(id, "c_filler") ~ "contradiction"))
 
+# PLOT ANNOTATOR ACCURACY
 (plt = ggplot(data=dat2, aes(x=as.factor(anon_id),y=response,col=expected_resp))+
     geom_jitter())
 
+# CALCULATE ANNOTATOR ACCURACY
 dat2_corr <- dat2 %>%
   mutate(corr_strong = case_when(expected_resp == "entailment" & response >= 99 ~ 1,
                           expected_resp == "entailment" & response < 99 ~ 0,
@@ -33,6 +35,13 @@ dat2_corr <- dat2 %>%
   summarise(mean_corr_strong = mean(corr_strong),
             mean_corr_weak = mean(corr_weak),
             count = n()/5)
+
+# PLOT RESPONSES ON EACH FILLER ITEM
+(plt.fill <- ggplot(data=dat2, aes(x=as.factor(id),y=response))+
+     geom_jitter(alpha=0.3,size=2)+
+     theme(axis.text.x=element_blank(),
+           axis.ticks.x=element_blank())+
+     facet_wrap(~expected_resp,scales="free_x"))
 
 ###################################
 # LOOK AT THE TARGET ITEMS

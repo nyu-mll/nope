@@ -32,3 +32,43 @@ for(tr in triggers){
 }
 
 View(data)
+
+
+# ---------- LOOK AT ALPHA FOR FILLER ITEMS ---------- 
+fillers <- trials %>% 
+  filter(type == "filler") %>%
+  mutate(expected_resp = case_when(str_detect(id, "e_filler") ~ "entailment",
+                                   str_detect(id, "c_filler") ~ "contradiction"))
+
+for(ty in unique(fillers$expected_resp)){
+  fillers2<-fillers %>%
+    filter(expected_resp == ty)%>%
+    select(id,response,anon_id)%>%
+    spread(id,response)
+  f2<- data.matrix(fillers2)
+  k=kripp.alpha(f2,"interval")
+  print(ty)
+  print(k)
+}
+
+
+# ----------GET OVERALL VALUES ---------- 
+for(ty in unique(trials$type)){
+  trials5<-trials %>%
+    filter(type == ty)%>%
+    select(id,response,anon_id)%>%
+    spread(id,response)
+  t5<- data.matrix(trials5)
+  k=kripp.alpha(t5,"interval")
+  print(ty)
+  print(k)
+}
+
+
+# ---------- OVERALL OVERALL ---------- 
+trials6 <- trials %>%
+  unite('ids',c(id,type))%>%
+  select(ids,response,anon_id)%>%
+  spread(ids,response)
+t6<- data.matrix(trials6)
+kripp.alpha(t6,"interval")

@@ -49,11 +49,20 @@ group2_workers = group2['workerid'].tolist()
 g0_qual = '39VCJNQUAP4BFGR22PHY7AOONL0XCB'
 g1_qual = '30YN3SB4AK3QK8TP2K3LMJSR1N302B'
 g2_qual = '31LAE79C57FYHR6ZW31PH2SAU4K8GP'
+sufficient_completed = '3XQ9J27GI6KR2C3EAATQ7K56T9EMHI'
+max2 = '3L3357QRGB0UZYW7L56S9NYTQ6L0HT'
 
-for i in range(len(group2_workers)):
-    worker_id = group2_workers[i]
+sufficient_completed_workers = ['7', '26', '35', '36', '44', '8', '13', '27', '34']
+sufficient_completed_worker_ids = worker_groups[worker_groups['anon_id'].isin(sufficient_completed_workers)]
+s_c_w_ids = sufficient_completed_worker_ids['workerid'].tolist()
+s_added = ['2','18','42']
+s_added_w_ids = worker_groups[worker_groups['anon_id'].isin(s_added)]
+s_c_w_ids2 = s_added_w_ids['workerid'].tolist()
+
+for i in range(len(s_c_w_ids2)):
+    worker_id = s_c_w_ids2[i]
     qual_assignment = client.associate_qualification_with_worker(
-        QualificationTypeId=g2_qual,
+        QualificationTypeId=max2,
         WorkerId=worker_id,
         IntegerValue=1,
         SendNotification=False)
@@ -63,16 +72,27 @@ for i in range(len(group2_workers)):
 # Set up inputs for study
 
 Quals = [{
-      "QualificationTypeId": g2_qual,
+      "QualificationTypeId": g0_qual,
       "Comparator": "Exists",
+      "ActionsGuarded": "DiscoverPreviewAndAccept"
+    },
+    {
+      "QualificationTypeId": sufficient_completed,
+      "Comparator": "DoesNotExist",
+      "ActionsGuarded": "DiscoverPreviewAndAccept"
+    },
+    {
+      "QualificationTypeId": max2,
+      "Comparator": "DoesNotExist",
       "ActionsGuarded": "DiscoverPreviewAndAccept"
     }]
 
 exp_url = "https://nyu-mll.github.io/presupposition_dataset/experiments/02_judgements/experiment.html"
 framehight = "650"
 
-for i in range(10):
-    this_exp = exp_url + "?stims=" + str(i) + "&amp;list=2"  # group 2
+for i in [7]:
+    #this_exp = exp_url + "?stims=" + str(i) + "&amp;list=2"  # group 2
+    this_exp = exp_url + "?stims=" + str(i) + "&amp;list=0"
 
     Question = """
         <ExternalQuestion xmlns='http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2006-07-14/ExternalQuestion.xsd'>
@@ -81,17 +101,17 @@ for i in range(10):
         </ExternalQuestion>
         """.format(this_exp, framehight)
 
-    #create = client.create_hit(
-        MaxAssignments=5,
+    create = client.create_hit(
+        MaxAssignments=1,
         AutoApprovalDelayInSeconds=259200,  # 3 days
         LifetimeInSeconds=259200,  # 3 days
-        AssignmentDurationInSeconds=7200,  # 2 hours
+        AssignmentDurationInSeconds=3600,  # 2 hours
         Reward='2.50',
         Title='Judge sentence likelihood (10 min)',
         Keywords='English, rating, reading',
-        Description='Read a short text and then judge how likely a statement is (10 min)',
+        Description='Read a short text and then judge how likely a statement is (10 min). You can complete multiple HITs.',
         Question=Question,
-        RequesterAnnotation='judgments_02_group_1',
+        RequesterAnnotation='judgments_02_group_0',
         QualificationRequirements=Quals
     )
     
@@ -131,17 +151,17 @@ message = "We are following up on our message from yesterday about a small batch
 # track and get responses
 
 # list relevant HITs
-# created_HITs = client.list_hits(MaxResults=10)
-# HITIds_2 = []
-# for i in range(10):
-#     this_id = created_HITs['HITs'][i]['HITId']
-#     HITIds_2.append(this_id)
+created_HITs = client.list_hits(MaxResults=1)
+HITIds_new5 = []
+for i in range(1):
+    this_id = created_HITs['HITs'][i]['HITId']
+    HITIds_new5.append(this_id)
 
-# df = pd.DataFrame(HITIds_2, columns = ["HITId"])
-# df.to_csv("C:/Users/NYUCM Loaner Access/Documents/GitHub/SECRET/presup_dataset_SECRET/mturk_data/02_judgments/group2_HITIds.csv")
+# df = pd.DataFrame(HITIds, columns = ["HITIds_new"])
+# df.to_csv("C:/Users/NYUCM Loaner Access/Documents/GitHub/SECRET/presup_dataset_SECRET/mturk_data/02_judgments/part6_HITIds.csv")
 
 # WHICH GROUP TO LOOK AT
-group = 'group2'
+group = 'group0'
 
 if group == 'group0':
     HITIds = HITIds_0
@@ -150,20 +170,25 @@ elif group == 'group1':
 elif group == 'group2':
     HITIds = HITIds_2
 
+HITIds = HITIds_new5
+
 # see number of responses per HIT
 tot = 0
-for i in range(10):
+for i in range(len(HITIds)):
     worker_results = client.list_assignments_for_hit(HITId=HITIds[i], MaxResults=100)
-    print('HIT %s has %d responses and is %s' % (str(i), worker_results['NumResults'], 
-                                                 client.get_hit(HITId=HITIds[i])['HIT']['HITStatus']))
+    print('HIT %s has %d responses of %d and is %s' % (str(i), worker_results['NumResults'],
+                                                       client.get_hit(HITId=HITIds[i])['HIT']['MaxAssignments'],
+                                                       client.get_hit(HITId=HITIds[i])['HIT']['HITStatus']))
     tot += worker_results['NumResults']
 print("A total of %d HITs have been completed for %s" % (tot, group))
 
 # save files
-for i in range(10):
+for i in range(len(HITIds)):
     results, result_types = get_results(HITIds[i])
+    #outname = "C:/Users/NYUCM Loaner Access/Documents/GitHub/SECRET/presup_dataset_SECRET/" \
+    #          "mturk_data/02_judgments/02_judgments_" + str(i) + "_" + group + ".json"
     outname = "C:/Users/NYUCM Loaner Access/Documents/GitHub/SECRET/presup_dataset_SECRET/" \
-              "mturk_data/02_judgments/02_judgments_" + str(i) + "_" + group + ".json"
+              "mturk_data/02_judgments/02_judgments_" + str(i) + "_part6.json"
     with io.open(outname, "w") as outfile:
         outfile.write(json.dumps(results))
 
@@ -189,10 +214,10 @@ print("Approved %d total assignments" % len(already_approved))
 # extend time of HITs
 tz = timezone('EST')
 
-for idd in HITIds_2:
+for idd in HITIds:
     response = client.update_expiration_for_hit(
         HITId=idd,
-        ExpireAt=datetime.datetime(2021, 2, 8, 23, 45, 15, tzinfo=tz)
+        ExpireAt=datetime.datetime(2021, 2, 8, 18, 45, 15, tzinfo=tz)
     )
 
 # ---------------------------------------------------------
@@ -220,12 +245,12 @@ for i in range(len(bonuses2)):  # skip index 0 because used as test already
         WorkerId=bonuses2['worker_id'][i],
         BonusAmount=str(0.5),
         AssignmentId=bonuses2['ass_id'][i],
-        Reason="Adjustment for the HIT taking longer than we'd expected.",
+        Reason="Pay adjustment: we found that the HIT takes longer than we'd expected.",
         UniqueRequestToken=bonuses2['uniqueID'][i]
     )
     data.append([bonuses2['uniqueID'][i], response['ResponseMetadata']['RequestId']])
     already_paid.append(bonuses2['ass_id'][i])
     
 df = pd.DataFrame(data, columns = ["uniqueId", "RequestId"])
-df.to_csv("C:/Users/NYUCM Loaner Access/Documents/GitHub/SECRET/presup_dataset_SECRET/02_judgments_bonus_payment_requestIds_2.csv")
+df.to_csv("C:/Users/NYUCM Loaner Access/Documents/GitHub/SECRET/presup_dataset_SECRET/02_judgments_bonus_payment_requestIds_4.csv")
 

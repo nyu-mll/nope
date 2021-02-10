@@ -38,6 +38,7 @@ dat2_corr <- dat2 %>%
 # PLOT RESPONSES ON EACH FILLER ITEM
 (plt.fill <- ggplot(data=dat2, aes(x=as.factor(id),y=response))+
      geom_jitter(alpha=0.3,size=2)+
+     geom_boxplot(alpha=0)+
      theme(axis.text.x=element_blank(),
            axis.ticks.x=element_blank())+
      facet_wrap(~expected_resp,scales="free_x"))
@@ -57,7 +58,7 @@ plt2 = ggplot(data=dat4, aes(x=type,y=mean_resp,col=type))+
   geom_jitter()+
   geom_boxplot(alpha=0)+
   facet_wrap(~trigger)+
-  ggtitle("Judgments pilot, partial data with 147 responses")+
+  ggtitle("Judgments pilot, full data with 150 responses")+
   theme(plot.title = element_text(hjust = 0.5),
         axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -78,7 +79,7 @@ dat5$condition <- factor(dat5$condition, levels = c("target-original","target-ne
   geom_line()+
   facet_grid(condition~trigger)+
   scale_x_discrete(expand=c(0,0.05))+
-  ggtitle("Judgments pilot, partial data with 147 responses (lines show prior to posterior judgment)")+
+  ggtitle("Judgments pilot, full data with 150 responses (lines show prior to posterior judgment)")+
   theme(plot.title = element_text(hjust = 0.5),
         axis.title.x=element_blank(),
         axis.text.x=element_blank(),

@@ -1,5 +1,6 @@
 library(tidyverse)
 library(stringr)
+library("brms")
 
 this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
 setwd(this.dir)
@@ -76,7 +77,7 @@ dat5<-dat4%>%
 dat5$rating_type <- factor(dat5$rating_type, levels = c("prior","posterior"))
 dat5$condition <- factor(dat5$condition, levels = c("target-original","target-negated"))
 (plt3 <- ggplot(data=dat5,aes(x=rating_type,y=response,group=id))+
-  geom_line()+
+  geom_line(alpha=.1)+
   facet_grid(condition~trigger)+
   scale_x_discrete(expand=c(0,0.05))+
   ggtitle("Judgments pilot, full data with 150 responses (lines show prior to posterior judgment)")+
@@ -85,4 +86,130 @@ dat5$condition <- factor(dat5$condition, levels = c("target-original","target-ne
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank())
 )
-  
+
+
+#########################
+# Beta regression model #
+#########################
+
+
+reg_dat <- dat %>%
+  filter(type!="filler") %>%
+  merge(stims, by="id") %>%
+  select(id, type, anon_id, trigger, response) %>%
+  mutate(response = response / 100.021 + 0.0001)
+
+reg_dat$type = factor(reg_dat$type)
+
+contrasts(reg_dat$type) <- contr.treatment(3, 2)
+colnames(contrasts(reg_dat$type)) <- c("negated", "prior")
+
+
+reg_dat$trigger = factor(reg_dat$trigger)
+
+contrasts(reg_dat$trigger) <- contr.treatment(10, 2)
+colnames(contrasts(reg_dat$trigger)) <- c("change_of_state", "comparatives", "continuation_of_state", "embedded_question", "factives", "implicative_predicates", "numeric_determiners", "re_verbs", "temporal_adverbs")
+
+
+fit = brm(response ~ type * trigger + (1 | anon_id) + (type | id), data=reg_dat, family="beta")
+
+summary(fit)
+
+
+predict(fit)
+
+
+theme_set(theme_bw())
+pp_checK(fit)
+
+params_worker = fit$fit %>% 
+  as.data.frame() %>% 
+  gather(key="Parameter") %>%
+  filter(grepl("r_anon_id", Parameter)) %>%
+  mutate(Parameter = gsub("r_anon_id.", "", Parameter)) %>%
+  mutate(Parameter = gsub(",Intercept.", "", Parameter))
+
+params_worker_summ = params_worker %>%
+  group_by(Parameter) %>%
+  summarise(lower=quantile(value, 0.025), upper=quantile(value, 0.975))
+
+params_worker %>% ggplot(aes(x=value)) +
+  geom_density() + 
+  facet_wrap(~Parameter) + 
+  geom_vline(xintercept=0, color="red") +
+  ggtitle("Random intercepts for workers") +
+  geom_errorbarh(aes(xmin=lower, xmax=upper, y=0), inherit.aes = F, data = params_worker_summ, color="blue")
+
+
+params_item_original = fit$fit %>% 
+  as.data.frame() %>% 
+  gather(key="Parameter") %>%
+  filter(grepl("r_id.*Intercept.$", Parameter)) %>%
+  mutate(Parameter = gsub("r_id.", "", Parameter)) %>%
+  mutate(Parameter = gsub(",Intercept.", "", Parameter))
+
+params_item_original_summ = params_item_original %>%
+  group_by(Parameter) %>%
+  summarise(lower=quantile(value, 0.025), upper=quantile(value, 0.975)) %>%
+  mutate(max_dev = pmax(abs(lower), abs(upper))) %>%
+  arrange(desc(max_dev)) %>%
+  mutate_at(vars(Parameter), ~factor(., levels=unique(.), ordered = T))  # convert to factor
+
+params_item_original$Parameter = factor(params_item_original$Parameter, levels=levels(params_item_original_summ$Parameter), ordered = T)
+
+params_item_original %>% ggplot(aes(x=value)) +
+  geom_density() + 
+  facet_wrap(~Parameter) + 
+  geom_vline(xintercept=0, color="red") +
+  ggtitle("Random intercepts for items (original)") +
+  geom_errorbarh(aes(xmin=lower, xmax=upper, y=0), inherit.aes = F, data = params_item_original_summ, color="blue")
+
+
+params_item_prior = fit$fit %>% 
+  as.data.frame() %>% 
+  gather(key="Parameter") %>%
+  filter(grepl("^r_id.*typeprior", Parameter)) %>%
+  mutate(Parameter = gsub("r_id.", "", Parameter)) %>%
+  mutate(Parameter = gsub(",typeprior", "", Parameter))
+
+params_item_prior_summ = params_item_prior %>%
+  group_by(Parameter) %>%
+  summarise(lower=quantile(value, 0.025), upper=quantile(value, 0.975)) %>%
+  mutate(max_dev = pmax(abs(lower), abs(upper))) %>%
+  arrange(desc(max_dev)) %>%
+  mutate_at(vars(Parameter), ~factor(., levels=unique(.), ordered = T))  # convert to factor
+
+params_item_prior$Parameter = factor(params_item_prior$Parameter, levels=levels(params_item_prior_summ$Parameter), ordered = T)
+
+params_item_prior %>% ggplot(aes(x=value)) +
+  geom_density() + 
+  facet_wrap(~Parameter) + 
+  geom_vline(xintercept=0, color="red") +
+  ggtitle("Random intercepts for items (prior)") +
+  geom_errorbarh(aes(xmin=lower, xmax=upper, y=0), inherit.aes = F, data = params_item_prior_summ, color="blue")
+
+
+
+params_item_negated = fit$fit %>% 
+  as.data.frame() %>% 
+  gather(key="Parameter") %>%
+  filter(grepl("^r_id.*typenegated", Parameter)) %>%
+  mutate(Parameter = gsub("r_id.", "", Parameter)) %>%
+  mutate(Parameter = gsub(",typenegated.", "", Parameter))
+
+params_item_negated_summ = params_item_negated %>%
+  group_by(Parameter) %>%
+  summarise(lower=quantile(value, 0.025), upper=quantile(value, 0.975)) %>%
+  mutate(max_dev = pmax(abs(lower), abs(upper))) %>%
+  arrange(desc(max_dev)) %>%
+  mutate_at(vars(Parameter), ~factor(., levels=unique(.), ordered = T))  # convert to factor
+
+params_item_negated$Parameter = factor(params_item_negated$Parameter, levels=levels(params_item_negated_summ$Parameter), ordered = T)
+
+params_item_negated %>% ggplot(aes(x=value)) +
+  geom_density() + 
+  facet_wrap(~Parameter) + 
+  geom_vline(xintercept=0, color="red") +
+  ggtitle("Random intercepts for items (negated)") +
+  geom_errorbarh(aes(xmin=lower, xmax=upper, y=0), inherit.aes = F, data = params_item_negated_summ, color="blue")
+

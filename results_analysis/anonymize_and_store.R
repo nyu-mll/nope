@@ -57,11 +57,13 @@ write.csv(new_subj_info,"01_prescreener/subj_info.csv", row.names=FALSE)
 
 ######################################################
 #
-# 02_JUDGMENTS
+# 02_JUDGMENTS AND AFTER
 #
 ######################################################
 
-this_run = "02_judgments"
+
+#this_run = "02_judgments"
+this_run = "03_judgment_reannotations"
 files = list.files(paste0(SECRET_dir,this_run),pattern = "*.json", full.names = T)
 
 trials = NULL
@@ -75,12 +77,13 @@ for(i in 1:length(files)){
     subj_info = rbind(subj_info,subj_info_temp)
   }
 }
+sort(unique(trials$Answer.time_in_minutes))
 
 anon_trials = anonymize(trials,anon_ids)
 anon_subj_info = anonymize(subj_info,anon_ids)
 
 # This participant put their worker id in the comments box for some reason
-anon_subj_info$comments[anon_subj_info$anon_id=='18'] = NA  
+# anon_subj_info$comments[anon_subj_info$anon_id=='18'] = NA  # use woth 02_judgments
 
-write.csv(anon_trials,"02_judgments/trials.csv", row.names=FALSE)
-write.csv(anon_subj_info,"02_judgments/subj_info.csv", row.names=FALSE)
+write.csv(anon_trials,"03_judgment_reannotations/trials.csv", row.names=FALSE)
+write.csv(anon_subj_info,"03_judgment_reannotations/subj_info.csv", row.names=FALSE)

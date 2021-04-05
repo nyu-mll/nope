@@ -10,9 +10,9 @@ setwd(this.dir)
 
 stim_lists <- data.frame(list_num = c(0:9),
                          id = c(1238,2459,188,2282,686,2066,1427,537,1102,947),
-                         negated = c(2,0,2,0,2,1,2,2,1,0),
+                         negated =  c(2,0,2,0,2,1,2,2,1,0),
                          original = c(0,2,1,1,1,0,1,0,0,1),
-                         prior = c(1,1,0,2,0,2,0,1,2,2))
+                         prior =    c(1,1,0,2,0,2,0,1,2,2))
 
 trials = read.csv("../results/02_judgments/trials.csv")
 

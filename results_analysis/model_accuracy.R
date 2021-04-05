@@ -72,7 +72,7 @@ for(i in 1:nrow(dat2)){
 
 #----------------  OVERLAP RATE COMPARISON BETWEEN ORIGINAL AND ADVERSARIAL ---------------- 
 
-dat_adversarial = read.csv("../annotations/03_pressupposition_dataset_adversarial_annotations.csv")
+dat_adversarial = read.csv("../annotations/04_pressupposition_dataset_adversarial_annotations.csv")
 
 dat_adv2 <- dat_adversarial %>%
   mutate(full_input_pos = ifelse(altered.sentence!="", paste0(context1," ", context2," ",altered.sentence), paste0(context1," ",context2," ",sentence))) %>%
@@ -106,12 +106,12 @@ dat_adv3 <- dat_adv2 %>%
             overlap_adv = mean(overlap_adv))%>%
   mutate(diff = overlap_adv - overlap_orig)
 
-write.csv(dat_adv2,"../annotations/03_adversarial_examples.csv")
+write.csv(dat_adv2,"../annotations/04_adversarial_examples.csv")
 
 
 # ---------------- ANALYZE ADVERSARIAL PREDS -----------------
 
-dat = read.csv("../model_results/03_preds_adversarial_roberta_mnli.csv",stringsAsFactors = F)
+dat = read.csv("../model_results/04_preds_adversarial_roberta_mnli.csv",stringsAsFactors = F)
 
 dat2 <- dat %>%
   mutate(preds_orig = case_when(preds_orig=='tensor(0)' ~ "C",

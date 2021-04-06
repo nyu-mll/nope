@@ -8,7 +8,7 @@ dat = read.csv("../model_results/02_judgments_preds_roberta_mnli.csv")
 dat2<-dat%>%filter(trigger!='filler')
 
 # overview of model results for each trigger and type
-(plt<-ggplot(data=dat2, aes(x = type, fill=pred2))+
+(plt<-ggplot(data=dat2, aes(x = type, fill=preds_orig))+
   geom_bar(stat='count')+
   facet_wrap(~trigger)+
   ggtitle("roberta large mnli")+
@@ -47,19 +47,19 @@ N_resp = mean(dat2$mean_resp[dat2$pred2=="N"])
 
 #---------------- calculate lexical overlap score for each item -----------------
 
-dat3<-dat2
+dat3<-dat2 %>% filter(type!='filler')
 dat3$overlap = NA
 
-for(i in 1:nrow(dat2)){
-  s=dat2$premise[i]
+for(i in 1:nrow(dat3)){
+  s=dat3$premise[i]
   ss=unique(unlist(strsplit(gsub("\\.","",tolower(s))," ")))
-  s2=dat2$hypothesis[i]
+  s2=dat3$hypothesis[i]
   ss2=unique(unlist(strsplit(gsub("\\.","",tolower(s2))," ")))
   o=intersect(ss,ss2)
   dat3$overlap[i]=(length(o)/length(ss2))*100  # overlap = % of words in hyp that are also in premise
 }
 
-(plt3 = ggplot(dat3,aes(x=overlap,col=pred2))+
+(plt3 = ggplot(dat3,aes(x=overlap,col=preds_orig))+
     geom_freqpoly(binwidth = 10,size=1.2)+
     #scale_y_continuous(trans = 'log10')+
     #facet_grid(.~trigger)+
@@ -111,16 +111,17 @@ write.csv(dat_adv2,"../annotations/04_adversarial_examples.csv")
 
 # ---------------- ANALYZE ADVERSARIAL PREDS -----------------
 
-dat = read.csv("../model_results/04_preds_adversarial_roberta_mnli.csv",stringsAsFactors = F)
+#dat = read.csv("../model_results/04_preds_adversarial_roberta_mnli.csv",stringsAsFactors = F)
+dat = read.csv("../model_results/03_preds_reannotations_roberta_mnli.csv",stringsAsFactors = F)
 
 dat2 <- dat %>%
   mutate(preds_orig = case_when(preds_orig=='tensor(0)' ~ "C",
                                 preds_orig=='tensor(1)' ~ "N",
                                 preds_orig=='tensor(2)' ~ "E"))%>%
-  mutate(preds_adv = case_when(preds_adv=='tensor(0)' ~ "C",
-                               preds_adv=='tensor(1)' ~ "N",
-                               preds_adv=='tensor(2)' ~ "E"))%>%
-  select(-X,-Unnamed..0)
+  # mutate(preds_adv = case_when(preds_adv=='tensor(0)' ~ "C",
+  #                              preds_adv=='tensor(1)' ~ "N",
+  #                              preds_adv=='tensor(2)' ~ "E"))%>%
+  select(-X)#,-Unnamed..0)
 
 dat_advers2<-dat_adversarial%>%
   filter(adversarial_hypothesis!='')%>%

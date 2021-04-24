@@ -81,7 +81,7 @@ Quals = [{
 #     }]
 
 create_2 = client.create_hit(
-    MaxAssignments=36,
+    MaxAssignments=50,
     AutoApprovalDelayInSeconds=259200,  # 3 days
     LifetimeInSeconds=259200,  # 3 days
     AssignmentDurationInSeconds=7200,  # 2 hours
@@ -113,7 +113,7 @@ for i in range(client.list_assignments_for_hit(HITId=pilot_1_HITId, MaxResults=1
 
 results, result_types = get_results(pilot_1_HITId)
 
-with io.open("C:/Users/NYUCM Loaner Access/Documents/GitHub/SECRET/presup_dataset_SECRET/mturk_data/01_prescreener_3.json", "w") as outfile:
+with io.open("C:/Users/NYUCM Loaner Access/Documents/GitHub/SECRET/presup_dataset_SECRET/mturk_data/01_prescreener_run2_2.json", "w") as outfile:
     outfile.write(json.dumps(results))
 
 # accept work

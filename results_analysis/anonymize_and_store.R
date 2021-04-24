@@ -27,7 +27,7 @@ anonymize = function(dat,anons){
 #
 ######################################################
 
-this_run = "01_prescreener_3"
+this_run = "01_prescreener_run2_1"
 dat<-read_json(paste0(SECRET_dir,"01_prescreener/",this_run,".json"))
 
 trials = dat[[1]][[1]]
@@ -41,19 +41,22 @@ updated_anons = cbind(workerid,anon_id)
 
 full_anon_file = rbind(anon_ids,updated_anons)
 
-write.csv(full_anon_file,"C:/Users/NYUCM Loaner Access/Documents/GitHub/SECRET/presup_dataset_SECRET/anon_id_links.csv", row.names=FALSE)
+write.csv(full_anon_file,"C:/Users/NYUCM Loaner Access/Documents/GitHub/SECRET/presup_dataset_SECRET/anon_id_links_updated.csv", row.names=FALSE)
 
 anon_trials = anonymize(trials,updated_anons)
 anon_subj_info = anonymize(subj_info,updated_anons)
 
-old_trials = read.csv("01_prescreener/trials.csv")
-old_subj_info = read.csv("01_prescreener/subj_info.csv")
+old_trials = read.csv("01_prescreener/trials_part2.csv")
+old_subj_info = read.csv("01_prescreener/subj_info_part2.csv")
 
 new_trials = rbind(old_trials,anon_trials)
 new_subj_info = rbind(old_subj_info,anon_subj_info)
 
-write.csv(new_trials,"01_prescreener/trials.csv", row.names=FALSE)
-write.csv(new_subj_info,"01_prescreener/subj_info.csv", row.names=FALSE)
+# write.csv(new_trials,"01_prescreener/trials.csv", row.names=FALSE)
+# write.csv(new_subj_info,"01_prescreener/subj_info.csv", row.names=FALSE)
+
+write.csv(new_trials,"01_prescreener/trials_part2.csv", row.names=FALSE)
+write.csv(new_subj_info,"01_prescreener/subj_info_part2.csv", row.names=FALSE)
 
 ######################################################
 #

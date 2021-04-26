@@ -28,7 +28,7 @@ with open(sys.argv[1], "r") as csv_f, open(sys.argv[2], "w") as out_f:
       
     if "altered_sentence_2" in line:
       if len(line["altered_sentence_2"].strip()) > 0:
-        line["altered_sentence"] = line["altered_sentence_2"]
+        line["altered sentence"] = line["altered_sentence_2"]
       del line["altered_sentence_2"]
     
     if "presupposition_2" in line:

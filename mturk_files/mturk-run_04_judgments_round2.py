@@ -47,20 +47,31 @@ group1_workers = group1['workerid'].tolist()
 g0_qual = '39VCJNQUAP4BFGR22PHY7AOONL0XCB'
 g1_qual = '30YN3SB4AK3QK8TP2K3LMJSR1N302B'
 sufficient_completed = '3XQ9J27GI6KR2C3EAATQ7K56T9EMHI'
+approaching_max = '3L3357QRGB0UZYW7L56S9NYTQ6L0HT'
 
-# for i in range(len(group1_workers)):
-#     worker_id = group1_workers[i]
-#     qual_assignment = client.associate_qualification_with_worker(
-#         QualificationTypeId=g1_qual,
-#         WorkerId=worker_id,
-#         IntegerValue=1,
-#         SendNotification=False)
-#     print("assigned qual to %s" % worker_id)
+# get the workers who have completed 7+ HITs
+workers_approaching_max = [60, 92, 133]
+workers_approaching_max_ids = worker_groups[worker_groups['anon_id'].isin(workers_approaching_max)]
+workers_approaching_max_ids = workers_approaching_max_ids['workerid'].tolist()
 
-for i in range(len(workers_completed)):
-    worker_id = workers_completed_1[i]
+# Workers who have completed 10+ HITs
+workers_at_max = [2, 83, 111, 129]
+workers_at_max_ids = worker_groups[worker_groups['anon_id'].isin(workers_at_max)]
+workers_at_max_ids = workers_at_max_ids['workerid'].tolist()
+
+for i in range(len(workers_approaching_max_ids)):
+    worker_id = workers_approaching_max_ids[i]
     qual_assignment = client.associate_qualification_with_worker(
-        QualificationTypeId=sufficient_completed_1,
+        QualificationTypeId=approaching_max,
+        WorkerId=worker_id,
+        IntegerValue=1,
+        SendNotification=False)
+    print("assigned qual to %s" % worker_id)
+
+for i in range(len(workers_at_max_ids)):
+    worker_id = workers_at_max_ids[i]
+    qual_assignment = client.associate_qualification_with_worker(
+        QualificationTypeId=sufficient_completed,
         WorkerId=worker_id,
         IntegerValue=1,
         SendNotification=False)
@@ -75,7 +86,7 @@ for i in range(len(workers_completed)):
 # for i in range(len(response['Qualifications'])):
 #     worker_id = response['Qualifications'][i]['WorkerId']
 #     qual_assignment = client.disassociate_qualification_from_worker(
-#         QualificationTypeId=sufficient_completed,
+#         QualificationTypeId=approaching_max,
 #         WorkerId=worker_id,
 #         Reason="Eligible to complete additional HITs")
 #     print("dissociated qual from %s" % worker_id)
@@ -85,7 +96,7 @@ for i in range(len(workers_completed)):
 infos = [(g0_qual, "0"), (g1_qual, "1")]
 
 for inf in range(len(infos)):
-    Quals = [{
+    Quals1 = [{
           "QualificationTypeId": infos[inf][0],
           "Comparator": "Exists",
           "ActionsGuarded": "DiscoverPreviewAndAccept"
@@ -94,12 +105,27 @@ for inf in range(len(infos)):
           "QualificationTypeId": sufficient_completed,
           "Comparator": "DoesNotExist",
           "ActionsGuarded": "DiscoverPreviewAndAccept"
+        },
+        {
+          "QualificationTypeId": approaching_max,
+          "Comparator": "DoesNotExist",
+          "ActionsGuarded": "DiscoverPreviewAndAccept"
+        }]
+    Quals2 = [{
+        "QualificationTypeId": infos[inf][0],
+        "Comparator": "Exists",
+        "ActionsGuarded": "DiscoverPreviewAndAccept"
+        },
+        {
+            "QualificationTypeId": sufficient_completed,
+            "Comparator": "DoesNotExist",
+            "ActionsGuarded": "DiscoverPreviewAndAccept"
         }]
 
     exp_url = "https://nyu-mll.github.io/presupposition_dataset/experiments/04_judgements_round2/experiment.html"
     framehight = "650"
 
-    for i in range(1, 10):
+    for i in range(20, 30):
         this_exp = exp_url + "?stims=" + str(i) + "&amp;list=" + infos[inf][1]
 
         Question = """
@@ -108,6 +134,11 @@ for inf in range(len(infos)):
               <FrameHeight>{}</FrameHeight>
             </ExternalQuestion>
             """.format(this_exp, framehight)
+
+        if i % 2 == 0:
+            Quals = Quals1
+        else:
+            Quals = Quals2
 
         create = client.create_hit(
             MaxAssignments=5,
@@ -151,7 +182,7 @@ for i in range(len(created_HITs['HITs'])):
     HITIds.append(this_id)
 
 # df = pd.DataFrame(HITIds, columns = ["HITIds"])
-# df.to_csv("C:/Users/NYUCM Loaner Access/Documents/GitHub/SECRET/presup_dataset_SECRET/mturk_data/04_judgments_part2/batch1_HITIds.csv")
+# df.to_csv("C:/Users/NYUCM Loaner Access/Documents/GitHub/SECRET/presup_dataset_SECRET/mturk_data/04_judgments_part2/batch2_HITIds.csv")
 
 # see number of responses per HIT
 tot = 0
@@ -193,7 +224,8 @@ for j in range(len(HITIds)):
 print("Approved %d total assignments" % len(already_approved))
 
 df_approved = pd.DataFrame(approved_ids, columns=['worker_id'])
-df_approved.worker_id.value_counts()
+counts = df_approved.worker_id.value_counts()
+print(counts[counts > 5])
 
 # ---------------------------------------------------------
 # extend time of HITs

@@ -50,12 +50,12 @@ sufficient_completed = '3XQ9J27GI6KR2C3EAATQ7K56T9EMHI'
 approaching_max = '3L3357QRGB0UZYW7L56S9NYTQ6L0HT'
 
 # get the workers who have completed 7+ HITs
-workers_approaching_max = [60, 92, 133]
+workers_approaching_max = [13, 44, 60, 78, 92, 134, 136, 137]
 workers_approaching_max_ids = worker_groups[worker_groups['anon_id'].isin(workers_approaching_max)]
 workers_approaching_max_ids = workers_approaching_max_ids['workerid'].tolist()
 
 # Workers who have completed 10+ HITs
-workers_at_max = [2, 83, 111, 129]
+workers_at_max = [2, 83, 104, 111, 129, 133]
 workers_at_max_ids = worker_groups[worker_groups['anon_id'].isin(workers_at_max)]
 workers_at_max_ids = workers_at_max_ids['workerid'].tolist()
 
@@ -91,6 +91,22 @@ for i in range(len(workers_at_max_ids)):
 #         Reason="Eligible to complete additional HITs")
 #     print("dissociated qual from %s" % worker_id)
 
+# remove qual for low accuracy workers (less than 50% on catch trials)
+#low_acc_workers = [82, 16, 67, 21, 122]
+low_acc_workers = []
+low_acc_worker_ids = worker_groups[worker_groups['anon_id'].isin(low_acc_workers)]
+low_acc_worker_ids_g0 = low_acc_worker_ids[low_acc_worker_ids['group']=='group0']
+low_acc_worker_ids_g0 = low_acc_worker_ids_g0['workerid'].tolist()
+low_acc_worker_ids_g1 = low_acc_worker_ids[low_acc_worker_ids['group']=='group1']
+low_acc_worker_ids_g1 = low_acc_worker_ids_g1['workerid'].tolist()
+
+# for i in range(len(low_acc_worker_ids_g1)):
+#     qual_assignment = client.disassociate_qualification_from_worker(
+#         QualificationTypeId=g1_qual,
+#         WorkerId=low_acc_worker_ids_g1[i],
+#         Reason="Below 50% accuracy on catch trials")
+#     print("dissociated qual from %s" % low_acc_worker_ids_g1[i])
+
 #-----------------------------------------------------
 # Set up inputs for study
 infos = [(g0_qual, "0"), (g1_qual, "1")]
@@ -125,7 +141,7 @@ for inf in range(len(infos)):
     exp_url = "https://nyu-mll.github.io/presupposition_dataset/experiments/04_judgements_round2/experiment.html"
     framehight = "650"
 
-    for i in range(20, 30):
+    for i in range(30, 40):
         this_exp = exp_url + "?stims=" + str(i) + "&amp;list=" + infos[inf][1]
 
         Question = """
@@ -135,6 +151,8 @@ for inf in range(len(infos)):
             </ExternalQuestion>
             """.format(this_exp, framehight)
 
+        # for people who've already done 7 HITs, make only half of the available visible to those people because
+        # they're close to hitting the max
         if i % 2 == 0:
             Quals = Quals1
         else:
@@ -182,7 +200,7 @@ for i in range(len(created_HITs['HITs'])):
     HITIds.append(this_id)
 
 # df = pd.DataFrame(HITIds, columns = ["HITIds"])
-# df.to_csv("C:/Users/NYUCM Loaner Access/Documents/GitHub/SECRET/presup_dataset_SECRET/mturk_data/04_judgments_part2/batch2_HITIds.csv")
+# df.to_csv("C:/Users/NYUCM Loaner Access/Documents/GitHub/SECRET/presup_dataset_SECRET/mturk_data/04_judgments_part2/batch4_HITIds.csv")
 
 # see number of responses per HIT
 tot = 0

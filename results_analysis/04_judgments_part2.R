@@ -17,6 +17,9 @@ dat2 <- dat %>%
                                    str_detect(id, "c_filler") ~ "contradiction",
                                    str_detect(id, 'n_filler') ~ "neutral"))
 
+low = c(26, 52)
+dat2 <- dat2 %>% filter(anon_id %in% low)
+
 # PLOT ANNOTATOR ACCURACY
 (plt = ggplot(data=dat2, aes(x=as.factor(anon_id),y=response,col=expected_resp))+
     geom_jitter())

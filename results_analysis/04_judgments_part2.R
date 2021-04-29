@@ -17,8 +17,8 @@ dat2 <- dat %>%
                                    str_detect(id, "c_filler") ~ "contradiction",
                                    str_detect(id, 'n_filler') ~ "neutral"))
 
-low = c(26, 52)
-dat2 <- dat2 %>% filter(anon_id %in% low)
+# low = c(99)
+# dat2 <- dat2 %>% filter(anon_id %in% low)
 
 # PLOT ANNOTATOR ACCURACY
 (plt = ggplot(data=dat2, aes(x=as.factor(anon_id),y=response,col=expected_resp))+
@@ -40,6 +40,8 @@ dat_corr <- dat2 %>%
             mean_corr_weak = mean(corr_weak),
             count = n())
 
+hist(dat_corr$mean_corr_weak, breaks = 30)
+
 # PLOT RESPONSES ON EACH FILLER ITEM
 (plt.fill <- ggplot(data=dat2, aes(x=as.factor(id),y=response))+
     geom_jitter(alpha=0.3,size=2)+
@@ -55,14 +57,22 @@ dat_corr <- dat2 %>%
 dat_a <- dat %>%
   filter(type!="filler")%>%
   group_by(id,type)%>%
-  summarise(mean_resp = mean(response))
+  summarise(mean_resp = mean(response))%>%
+  separate(id, c("id_num","adv"), sep = "_")%>%
+  mutate(adversarial = case_when(is.na(adv) ~ "non",
+                                 !is.na(adv) ~ "adv"))%>%
+  mutate(id = case_when(adversarial=="non" ~ id_num,
+                        adversarial=="adv" ~ adv))%>%
+  select(-adv,-id_num)
 
 dat_b <- merge(dat_a,stims,by="id")
 
-plt2 = ggplot(data=dat_b, aes(x=type,y=mean_resp,col=type))+
-  geom_jitter()+
+dat_c <- dat_b %>% filter(adversarial=="non")
+
+plt2 = ggplot(data=dat_c, aes(x=type,y=mean_resp,col=type))+
+  geom_jitter(alpha = 0.5)+
   geom_boxplot(alpha=0)+
-  ggtitle(" ")+
+  ggtitle("Mean participant responses on original items")+
   facet_wrap(~trigger)+
   theme(plot.title = element_text(hjust = 0.5),
         axis.title.x=element_blank(),
@@ -70,5 +80,19 @@ plt2 = ggplot(data=dat_b, aes(x=type,y=mean_resp,col=type))+
         axis.ticks.x=element_blank(),
         legend.position = c(0.85, 0.2))
 plt2
+
+dat_d <- dat_b %>% filter(adversarial=="adv")
+
+plt3 = ggplot(data=dat_d, aes(x=type,y=mean_resp,col=type))+
+  geom_jitter(alpha = 0.5)+
+  geom_boxplot(alpha=0)+
+  ggtitle("Mean participant responses on adversarial items")+
+  facet_wrap(~trigger)+
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        legend.position = c(0.85, 0.2))
+plt3
 
 

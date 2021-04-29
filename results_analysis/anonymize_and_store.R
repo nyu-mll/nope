@@ -3,11 +3,8 @@ library(rjson)
 library(jsonlite)
 
 setwd("C:/Users/NYUCM Loaner Access/Documents/GitHub/presupposition_dataset/results")
-
 anon_ids = read.csv("C:/Users/NYUCM Loaner Access/Documents/GitHub/SECRET/presup_dataset_SECRET/anon_id_links.csv")
-
 SECRET_dir = "C:/Users/NYUCM Loaner Access/Documents/GitHub/SECRET/presup_dataset_SECRET/mturk_data/"
-this_run = "01_prescreener_3"
 
 read_json <- function(file){
   con <- file(file, open = "r")
@@ -80,10 +77,14 @@ for(i in 1:length(files)){
     trials_temp = temp[['trials']][[1]]
     trials = rbind(trials,trials_temp)
     subj_info_temp = temp[['subject_information']][[1]]
+    if(!"asses" %in% names(subj_info_temp)){subj_info_temp$asses = NA}  # sometimes workers don't answer this question
     subj_info = rbind(subj_info,subj_info_temp)
   }
 }
+
+# Take a look at how long workers are taking on the task
 #sort(unique(trials$Answer.time_in_minutes))
+hist(trials$Answer.time_in_minutes[trials$Answer.time_in_minutes<45], breaks = 50)
 
 anon_trials = anonymize(trials,anon_ids)
 anon_subj_info = anonymize(subj_info,anon_ids)

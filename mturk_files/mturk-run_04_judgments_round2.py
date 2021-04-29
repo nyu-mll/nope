@@ -213,7 +213,7 @@ message = "We've just released the final batch of HITs this week with the title 
 # track and get responses
 
 # list relevant HITs
-created_HITs = client.list_hits(MaxResults=24)
+created_HITs = client.list_hits(MaxResults=26)
 HITIds = []
 for i in range(len(created_HITs['HITs'])):
     this_id = created_HITs['HITs'][i]['HITId']

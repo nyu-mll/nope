@@ -3,15 +3,40 @@ library(tidyverse)
 this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
 setwd(this.dir)
 
-dat = read.csv("../model_results/02_judgments_preds_roberta_mnli.csv")
+stims = read.csv("../experiments/stimuli/all_annotations_cleaned.csv")
+stims = stims %>% select(sent_id,trigger) %>% rename("id" = sent_id)
 
-dat2<-dat%>%filter(trigger!='filler')
+#dat = read.csv("../model_results/02_judgments_preds_roberta_mnli.csv")
+dat_ro = read.csv("../model_results/04_preds_judgments_roberta_mnli.csv")
+dat_de = read.csv("../model_results/04_preds_judgments_deberta_mnli.csv")
+
+dat_ro$model = 'roberta'
+dat_de$model = 'deberta'
+
+dat = rbind(dat_ro, dat_de)
+
+dat2 <- dat %>%
+  filter(type!="filler")%>%
+  separate(id, c("id_num","adv"), sep = "_")%>%
+  mutate(adversarial = case_when(is.na(adv) ~ "non",
+                                 !is.na(adv) ~ "adv"))%>%
+  mutate(id = case_when(adversarial=="non" ~ id_num,
+                        adversarial=="adv" ~ adv))%>%
+  select(-adv,-id_num, -X)%>%
+  mutate(pred2 = case_when(preds == 0 ~ 'Contradiction',
+                           preds == 1 ~ 'Neutral',
+                           preds == 2 ~ 'Entailement'))
+
+dat3 <- merge(dat2,stims,by="id")
+
+dat_adv = dat3 %>% filter(adversarial=='adv')
+dat_nonadv = dat3 %>% filter(adversarial == 'non')
 
 # overview of model results for each trigger and type
-(plt<-ggplot(data=dat2, aes(x = type, fill=preds_orig))+
+(plt<-ggplot(data=dat_adv, aes(x = type, fill=pred2))+
   geom_bar(stat='count')+
-  facet_wrap(~trigger)+
-  ggtitle("roberta large mnli")+
+  facet_grid(model~trigger)+
+  ggtitle("Model results for models pre-trained on MNLI, adversarial examples")+
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1),
         plot.title = element_text(hjust = 0.5)))
 

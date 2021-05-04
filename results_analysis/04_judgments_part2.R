@@ -9,7 +9,7 @@ dat = read.csv("../results/04_judgments_part2/trials.csv")
 stims = read.csv("../experiments/stimuli/all_annotations_cleaned.csv")
 stims = stims %>% select(sent_id,trigger) %>% rename("id" = sent_id)
 
-# ----------------- LOOK AT THE FILLER ITEMS FOR 03_JUDGMENT_REANNOTATIONS -----------------
+# ----------------- LOOK AT THE FILLER ITEMS  -----------------
 
 dat2 <- dat %>%
   filter(type=="filler")%>%
@@ -40,6 +40,9 @@ dat_corr <- dat2 %>%
             mean_corr_weak = mean(corr_weak),
             count = n())
 
+# make list of workers with accuracy below a certain trheshold
+low_acc <- unique(dat_corr$anon_id[dat_corr$mean_corr_weak < .7])
+
 hist(dat_corr$mean_corr_weak, breaks = 30)
 
 # PLOT RESPONSES ON EACH FILLER ITEM
@@ -56,6 +59,7 @@ hist(dat_corr$mean_corr_weak, breaks = 30)
 # PLOT ALL CONDITIONS WITH SCATTERPLOTS AND BOXPLOTS
 dat_a <- dat %>%
   filter(type!="filler")%>%
+  filter(!anon_id %in% low_acc) %>%
   group_by(id,type)%>%
   summarise(mean_resp = mean(response))%>%
   separate(id, c("id_num","adv"), sep = "_")%>%

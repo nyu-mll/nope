@@ -4,7 +4,8 @@ library(stringr)
 this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
 setwd(this.dir)
 
-dat = read.csv("../results/02_judgments/trials.csv")
+#dat = read.csv("../results/02_judgments/trials.csv")
+dat = read.csv("../results/04_judgments_part2/trials.csv")
 
 stims = read.csv("../experiments/stimuli/all_annotations_cleaned.csv")
 stims = stims %>% select(sent_id,trigger) %>% rename("id" = sent_id)
@@ -15,7 +16,7 @@ dat2 <- dat %>%
             allresps = paste(confusing_reason, collapse=" --- "))%>%
   filter(!confusing==0)
 
-write.csv(dat2, 'confused_responses.csv', row.names = F)
+write.csv(dat2, 'confused_responses_04.csv', row.names = F)
 
 # ----------------- LOOK AT THE TARGET ITEMS -----------------
 

@@ -18,7 +18,7 @@ dat2 <- dat %>%
                                    str_detect(id, 'n_filler') ~ "neutral"))
 
 # low = c(99)
-# dat2 <- dat2 %>% filter(anon_id %in% low)
+# dat3 <- dat2 %>% filter(anon_id %in% low)
 
 # PLOT ANNOTATOR ACCURACY
 (plt = ggplot(data=dat2, aes(x=as.factor(anon_id),y=response,col=expected_resp))+
@@ -46,9 +46,14 @@ low_acc <- unique(dat_corr$anon_id[dat_corr$mean_corr_weak < .7])
 hist(dat_corr$mean_corr_weak, breaks = 30)
 
 # PLOT RESPONSES ON EACH FILLER ITEM
-(plt.fill <- ggplot(data=dat2, aes(x=as.factor(id),y=response))+
-    geom_jitter(alpha=0.3,size=2)+
-    geom_boxplot(alpha=0)+
+(plt.fill <- ggplot(data=dat2%>%filter(anon_id!=99), aes(x=as.factor(id),y=response))+
+    #geom_jitter(alpha=0.3,size=2)+
+    #geom_boxplot(alpha=0)+
+    stat_summary(
+      geom = "point",
+      fun = "mean",
+    )+
+    geom_point(data=dat3,col='red')+
     theme(axis.text.x=element_blank(),
           axis.ticks.x=element_blank())+
     facet_wrap(~expected_resp,scales="free_x"))
@@ -100,3 +105,19 @@ plt3 = ggplot(data=dat_d, aes(x=type,y=mean_resp,col=type))+
 plt3
 
 
+# ----------------- DETERMINE WHICH ITEMS NEED REANNOTATION & HOW MANY  -----------------
+dat_nums <- dat %>%
+  filter(type!="filler")%>%
+  filter(!anon_id %in% low_acc) %>%
+  group_by(id,type)%>%
+  mutate(need=5-n())%>%
+  filter(need > 0)%>%
+  select(-Answer.condition,-Answer.time_in_minutes,-confusing,-response,-trial,-confusing_reason)
+
+dat_annotators <- dat_nums %>%
+  group_by(anon_id) %>%
+  summarise(count=n())
+  
+
+
+  

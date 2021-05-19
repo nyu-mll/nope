@@ -66,7 +66,8 @@ write.csv(new_subj_info,"01_prescreener/subj_info_part2.csv", row.names=FALSE)
 
 #this_run = "02_judgments"
 #this_run = "03_judgment_reannotations"
-this_run = "04_judgments_part2"
+#this_run = "04_judgments_part2"
+this_run = "05_judgment_reannotations"
 files = list.files(paste0(SECRET_dir,this_run),pattern = "*.json", full.names = T)
 
 trials = NULL
@@ -83,17 +84,17 @@ for(i in 1:length(files)){
 }
 
 # Take a look at how long workers are taking on the task
-#sort(unique(trials$Answer.time_in_minutes))
+sort(unique(trials$Answer.time_in_minutes))
 hist(trials$Answer.time_in_minutes[trials$Answer.time_in_minutes<45], breaks = 50)
 
 anon_trials = anonymize(trials,anon_ids)
 anon_subj_info = anonymize(subj_info,anon_ids)
 
 # This participant put their worker id in the comments box for some reason
-anon_subj_info$comments[anon_subj_info$anon_id=='18'] = NA  # use with 02_judgments and 04_judgments_part2
+#anon_subj_info$comments[anon_subj_info$anon_id=='18'] = NA  # use with 02_judgments and 04_judgments_part2
 
-write.csv(anon_trials,"04_judgments_part2/trials.csv", row.names=FALSE)
-write.csv(anon_subj_info,"04_judgments_part2/subj_info.csv", row.names=FALSE)
+write.csv(anon_trials,"05_judgment_reannotations/trials.csv", row.names=FALSE)
+write.csv(anon_subj_info,"05_judgment_reannotations/subj_info.csv", row.names=FALSE)
 
 # CHECK COMPLETION TIMES
 #x<-anon_trials[!duplicated(anon_trials[c('Answer.time_in_minutes')]),] %>% select(anon_id,Answer.time_in_minutes) 

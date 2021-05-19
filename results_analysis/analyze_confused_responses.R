@@ -29,11 +29,21 @@ dat3 <- dat %>%
 dat4 <- merge(dat3,stims,by="id")
 
 dat5 <- dat4 %>%
-  filter(trigger!="factives")%>%
+  #filter(trigger!="factives")%>%
   mutate(confusing = case_when(confusing==0 ~ 'not marked',
-                               confusing==1 ~ 'marked confusing'))
+                               confusing==1 ~ 'marked confusing'))%>%
+  unite(id_type, c(id,type),remove=F)
 
-plt2 = ggplot(data=dat5, aes(x=type,y=response,col=type))+
+dat6 <- dat5 %>%
+  select(id_type,confusing)%>%
+  filter(confusing=='marked confusing')
+
+confusings = unique(dat6$id_type)
+
+dat7 <- dat5 %>%
+  filter(id_type %in% confusings)
+
+plt2 = ggplot(data=dat7, aes(x=type,y=response,col=confusing))+
   geom_jitter(alpha=0.25)+
   geom_boxplot(alpha=0, lwd = 1.5)+
   facet_wrap(~confusing)+
@@ -44,6 +54,16 @@ plt2 = ggplot(data=dat5, aes(x=type,y=response,col=type))+
         axis.ticks.x=element_blank())#,
         #legend.position = c(0.9, 0.2))
 plt2
+
+(plt3 <- ggplot(data=dat7, aes(x=confusing, y=response, group=id_type))+
+    stat_summary(
+      geom = "line",
+      fun = "mean",
+      alpha = 0.5
+    )+
+    facet_wrap(~trigger)+
+    ggtitle('Means of items split by whether confusing was marked')
+  )
 
 # ----------------- RATE OF MARKING THINGS CONFUSING -----------------
 dat6 <- dat4 %>%

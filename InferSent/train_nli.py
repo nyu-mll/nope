@@ -222,15 +222,15 @@ def trainepoch(epoch):
 
         if len(all_costs) == 100:
             logs.append('{0} ; loss {1} ; sentence/s {2} ; words/s {3} ; accuracy train : {4}'.format(
-                            stidx, round(np.mean(all_costs), 2),
+                            stidx, np.mean(all_costs),
                             int(len(all_costs) * params.batch_size / (time.time() - last_time)),
                             int(words_count * 1.0 / (time.time() - last_time)),
-                            torch.round(100.*correct/(stidx+k), 2)))
+                            100.*correct/(stidx+k)))
             print(logs[-1])
             last_time = time.time()
             words_count = 0
             all_costs = []
-    train_acc = torch.round(100 * correct.item()/len(s1), 2)
+    train_acc = 100 * correct.item()/len(s1)
     print('results : epoch {0} ; mean accuracy train : {1}'
           .format(epoch, train_acc))
     return train_acc
@@ -269,7 +269,7 @@ def evaluate(epoch, eval_type='valid', final_eval=False):
         correct += pred.long().eq(tgt_batch.data.long()).cpu().sum()
 
     # save model
-    eval_acc = torch.round(100 * correct.item() / len(s1), 2)
+    eval_acc = 100 * correct.item() / len(s1)
     if final_eval:
         print('finalgrep : accuracy {0} : {1}'.format(eval_type, eval_acc))
     else:

@@ -209,7 +209,7 @@ def trainepoch(epoch):
             if p.requires_grad:
                 p.grad.data.div_(k)  # divide by the actual batch size
                 total_norm += p.grad.data.norm() ** 2
-        total_norm = np.sqrt(total_norm)
+        total_norm = np.sqrt(total_norm.cpu())
 
         if total_norm > params.max_norm:
             shrink_factor = params.max_norm / total_norm

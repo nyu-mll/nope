@@ -177,10 +177,12 @@ def trainepoch(epoch):
         s2_batch, s2_len = get_batch(s2[stidx:stidx + params.batch_size],
                                      word_vec, params.word_emb_dim)
 
-        # s1_batch, s2_batch = Variable(s1_batch.cuda()), Variable(s2_batch.cuda())
-        # tgt_batch = Variable(torch.LongTensor(target[stidx:stidx + params.batch_size])).cuda()
-        s1_batch, s2_batch = Variable(CUDA_OR_NOT(s1_batch)), Variable(CUDA_OR_NOT(s2_batch))
-        tgt_batch = CUDA_OR_NOT(Variable(torch.LongTensor(target[stidx:stidx + params.batch_size])))
+        if params.cpu:
+            s1_batch, s2_batch = Variable(s1_batch), Variable(s2_batch)
+            tgt_batch = Variable(torch.LongTensor(target[stidx:stidx + params.batch_size]))
+        else:
+            s1_batch, s2_batch = Variable(s1_batch.cuda()), Variable(s2_batch.cuda())
+            tgt_batch = Variable(torch.LongTensor(target[stidx:stidx + params.batch_size])).cuda()
         k = s1_batch.size(1)  # actual batch size
 
         # model forward
@@ -251,8 +253,14 @@ def evaluate(epoch, eval_type='valid', final_eval=False):
         # prepare batch
         s1_batch, s1_len = get_batch(s1[i:i + params.batch_size], word_vec, params.word_emb_dim)
         s2_batch, s2_len = get_batch(s2[i:i + params.batch_size], word_vec, params.word_emb_dim)
-        s1_batch, s2_batch = Variable(CUDA_OR_NOT(s1_batch)), Variable(CUDA_OR_NOT(s2_batch))
-        tgt_batch = CUDA_OR_NOT(Variable(torch.LongTensor(target[i:i + params.batch_size])))
+        if params.cpu:
+            s1_batch, s2_batch = Variable(s1_batch), Variable(s2_batch)
+            tgt_batch = Variable(torch.LongTensor(target[i:i + params.batch_size]))
+        else:
+            s1_batch, s2_batch = Variable(s1_batch.cuda()), Variable(s2_batch.cuda())
+            tgt_batch = Variable(torch.LongTensor(target[i:i + params.batch_size])).cuda()
+            # s1_batch, s2_batch = Variable(CUDA_OR_NOT(s1_batch)), Variable(CUDA_OR_NOT(s2_batch))
+            # tgt_batch = CUDA_OR_NOT(Variable(torch.LongTensor(target[i:i + params.batch_size])))
 
         # model forward
         output = nli_net((s1_batch, s1_len), (s2_batch, s2_len))

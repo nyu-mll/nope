@@ -26,11 +26,12 @@ class InferSent(nn.Module):
         self.bsize = config['bsize']
         self.word_emb_dim = config['word_emb_dim']
         self.enc_lstm_dim = config['enc_lstm_dim']
+        self.n_enc_layers = config['n_enc_layers']
         self.pool_type = config['pool_type']
         self.dpout_model = config['dpout_model']
         self.version = 1 if 'version' not in config else config['version']
 
-        self.enc_lstm = nn.LSTM(self.word_emb_dim, self.enc_lstm_dim, 1,
+        self.enc_lstm = nn.LSTM(self.word_emb_dim, self.enc_lstm_dim, self.n_enc_layers,
                                 bidirectional=True, dropout=self.dpout_model)
 
         assert self.version in [1, 2]

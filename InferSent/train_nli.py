@@ -41,7 +41,7 @@ parser.add_argument("--minlr", type=float, default=1e-5, help="minimum lr")
 parser.add_argument("--max_norm", type=float, default=5., help="max norm (grad clipping)")
 
 # model
-parser.add_argument("--encoder_type", type=str, default='InferSentV1', help="see list of encoders")
+parser.add_argument("--encoder_type", type=str, default='InferSent', help="see list of encoders")
 parser.add_argument("--enc_lstm_dim", type=int, default=2048, help="encoder nhid dimension")
 parser.add_argument("--n_enc_layers", type=int, default=1, help="encoder num layers")
 parser.add_argument("--fc_dim", type=int, default=512, help="nhid of fc layers")
@@ -49,7 +49,7 @@ parser.add_argument("--n_classes", type=int, default=3, help="entailment/neutral
 parser.add_argument("--pool_type", type=str, default='max', help="max or mean")
 
 # gpu
-parser.add_argument("--gpu_id", type=int, default=3, help="GPU ID")
+parser.add_argument("--gpu_id", type=int, default=0, help="GPU ID")
 parser.add_argument("--seed", type=int, default=1234, help="seed")
 parser.add_argument("--cpu", dest="cpu", default=False, action="store_true")
 
@@ -167,10 +167,9 @@ def trainepoch(epoch):
 
     total_batches = len(s1) // params.batch_size
     for stidx in range(0, len(s1), params.batch_size):
-    # for stidx in range(0, 64, params.batch_size):
-        n_batches = stidx // params.batch_size
-        if n_batches % 100 == 0:
-            print(f"{n_batches} batches out of {total_batches} complete. Epoch is {int(100 * n_batches/total_batches)}% done.")
+        # n_batches = stidx // params.batch_size
+        # if n_batches % 100 == 0:
+        #     print(f"{n_batches} batches out of {total_batches} complete. Epoch is {int(100 * n_batches/total_batches)}% done.")
         # prepare batch
         s1_batch, s1_len = get_batch(s1[stidx:stidx + params.batch_size],
                                      word_vec, params.word_emb_dim)

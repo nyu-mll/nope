@@ -74,7 +74,7 @@ def get_nli(data_path):
                                  open(s1[data_type]['path'], 'r')]
         s2[data_type]['sent'] = [line.rstrip() for line in
                                  open(s2[data_type]['path'], 'r')]
-        target[data_type]['data'] = np.array([dico_label[line.rstrip('\n')]
+        target[data_type]['data'] = np.array([dico_label[line.rstrip()]
                 for line in open(target[data_type]['path'], 'r')])
 
         assert len(s1[data_type]['sent']) == len(s2[data_type]['sent']) == \

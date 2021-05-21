@@ -2,7 +2,6 @@ import itertools
 import random
 
 sweep = {
-    "nlipath": ["dataset/combined"],
     "batch_size": [32, 64, 128],
     "dpout_model": [0, 0.1],
     "nonlinear_fc": [0, 1],
@@ -28,7 +27,7 @@ source /ext3/env.sh
 conda activate
 
 cd ../..
-python train_nli.py {args}
+python train_nli.py --nlipath dataset/combined {args}
 "
 """
 

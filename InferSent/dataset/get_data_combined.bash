@@ -35,7 +35,6 @@ mkdir ANLI
 curl -Lo ANLI/anli_1.0.zip $ANLI
 $ZIPTOOL ANLI/anli_1.0.zip -d ANLI
 rm ANLI/anli_1.0.zip
-rm -r MultiNLI/__MACOSX
 
 # call python script to combine all train/test/dev sets from 3 SNLI/MNLI/ANLI
 python combine_datasets.py
@@ -43,7 +42,6 @@ python combine_datasets.py
 # tokenize combined dataset
 for x in combined/*
 do
-    echo $x
     $preprocess_exec $x > $x.temp
     mv $x.temp $x
 done

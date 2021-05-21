@@ -34,4 +34,4 @@ for split, field in itertools.product([("train", train), ("test", test), ("dev",
     field_short = "s1" if field=="sentence1" else "s2" if field=="sentence2" else "labels"
     with open(f"combined/{field_short}.{split[0]}", "w") as f:
         for line in list(split[1][field]):
-            f.write(line + "\n")
+            f.write(line.strip() + "\n")

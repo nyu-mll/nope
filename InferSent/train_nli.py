@@ -25,6 +25,7 @@ parser = argparse.ArgumentParser(description='NLI training')
 # paths
 parser.add_argument("--nlipath", type=str, default='dataset/SNLI/', help="NLI data path (SNLI or MultiNLI)")
 parser.add_argument("--outputdir", type=str, default='savedir/', help="Output directory")
+parser.add_argument("--logdir", type=str, default='logs/', help="Logs directory")
 parser.add_argument("--outputmodelname", type=str, default='model.pickle')
 parser.add_argument("--word_emb_path", type=str, default="dataset/GloVe/glove.840B.300d.txt", help="word embedding file path")
 
@@ -51,10 +52,14 @@ parser.add_argument("--pool_type", type=str, default='max', help="max or mean")
 # gpu
 parser.add_argument("--gpu_id", type=int, default=0, help="GPU ID")
 parser.add_argument("--seed", type=int, default=1234, help="seed")
-parser.add_argument("--cpu", dest="cpu", default=False, action="store_true")
+parser.add_argument("--cpu", type=int, default=0, help="Use CPU only")
 
 # data
 parser.add_argument("--word_emb_dim", type=int, default=300, help="word embedding dimension")
+
+# debugging
+parser.add_argument("--debug", type=int, default=0, help="Run in debug mode, i.e. only do very short epochs for testing purposes")
+
 
 params, _ = parser.parse_known_args()
 
@@ -62,9 +67,17 @@ params, _ = parser.parse_known_args()
 if not params.cpu:
     torch.cuda.set_device(params.gpu_id)
 
+logfile = open(os.path.join(params.logdir, params.outputmodelname + ".log"), "w")
+logfile_final = open(os.path.join(params.logdir, params.outputmodelname + "log.final"), "w")
+def log(s):
+    print(s)
+    logfile.write(str(s) + "\n")
+    logfile.flush()
+
 # print parameters passed, and all parameters
-print('\ntogrep : {0}\n'.format(sys.argv[1:]))
-print(params)
+log('\ntogrep : {0}\n'.format(sys.argv[1:]))
+log(params)
+final_output = {sys.argv[i][2:]: sys.argv[i+1] for i in range(1, len(sys.argv), 2)}
 
 
 """
@@ -117,7 +130,7 @@ encoder_types = ['InferSent', 'BLSTMprojEncoder', 'BGRUlastEncoder',
 assert params.encoder_type in encoder_types, "encoder_type must be in " + \
                                              str(encoder_types)
 nli_net = NLINet(config_nli_model)
-print(nli_net)
+log(nli_net)
 
 # loss
 weight = torch.FloatTensor(params.n_classes).fill_(1)
@@ -145,7 +158,7 @@ lr = optim_params['lr'] if 'sgd' in params.optimizer else None
 
 
 def trainepoch(epoch):
-    print('\nTRAINING : Epoch ' + str(epoch))
+    log('\nTRAINING : Epoch ' + str(epoch))
     nli_net.train()
     all_costs = []
     logs = []
@@ -163,13 +176,14 @@ def trainepoch(epoch):
 
     optimizer.param_groups[0]['lr'] = optimizer.param_groups[0]['lr'] * params.decay if epoch>1\
         and 'sgd' in params.optimizer else optimizer.param_groups[0]['lr']
-    print('Learning rate : {0}'.format(optimizer.param_groups[0]['lr']))
+    log('Learning rate : {0}'.format(optimizer.param_groups[0]['lr']))
 
     total_batches = len(s1) // params.batch_size
-    for stidx in range(0, len(s1), params.batch_size):
+    n_sentences = params.batch_size if params.debug else len(s1)
+    for stidx in range(0, n_sentences, params.batch_size):
         # n_batches = stidx // params.batch_size
         # if n_batches % 100 == 0:
-        #     print(f"{n_batches} batches out of {total_batches} complete. Epoch is {int(100 * n_batches/total_batches)}% done.")
+        #     log(f"{n_batches} batches out of {total_batches} complete. Epoch is {int(100 * n_batches/total_batches)}% done.")
         # prepare batch
         s1_batch, s1_len = get_batch(s1[stidx:stidx + params.batch_size],
                                      word_vec, params.word_emb_dim)
@@ -225,12 +239,12 @@ def trainepoch(epoch):
                             int(len(all_costs) * params.batch_size / (time.time() - last_time)),
                             int(words_count * 1.0 / (time.time() - last_time)),
                             100.*correct/(stidx+k)))
-            print(logs[-1])
+            log(logs[-1])
             last_time = time.time()
             words_count = 0
             all_costs = []
     train_acc = 100 * correct.item()/len(s1)
-    print('results : epoch {0} ; mean accuracy train : {1}'
+    log('results : epoch {0} ; mean accuracy train : {1}'
           .format(epoch, train_acc))
     return train_acc
 
@@ -241,14 +255,15 @@ def evaluate(epoch, eval_type='valid', final_eval=False):
     global val_acc_best, lr, stop_training, adam_stop
 
     if eval_type == 'valid':
-        print('\nVALIDATION : Epoch {0}'.format(epoch))
+        log('\nVALIDATION : Epoch {0}'.format(epoch))
 
     s1 = valid['s1'] if eval_type == 'valid' else test['s1']
     s2 = valid['s2'] if eval_type == 'valid' else test['s2']
     target = valid['label'] if eval_type == 'valid' else test['label']
 
-    for i in range(0, len(s1), params.batch_size):
-    # for i in range(0, 64, params.batch_size):
+
+    n_sentences = params.batch_size if params.debug else len(s1)
+    for i in range(0, n_sentences, params.batch_size):
         # prepare batch
         s1_batch, s1_len = get_batch(s1[i:i + params.batch_size], word_vec, params.word_emb_dim)
         s2_batch, s2_len = get_batch(s2[i:i + params.batch_size], word_vec, params.word_emb_dim)
@@ -270,14 +285,15 @@ def evaluate(epoch, eval_type='valid', final_eval=False):
     # save model
     eval_acc = 100 * correct.item() / len(s1)
     if final_eval:
-        print('finalgrep : accuracy {0} : {1}'.format(eval_type, eval_acc))
+        log('finalgrep : accuracy {0} : {1}'.format(eval_type, eval_acc))
+        final_output[eval_type] = eval_acc
     else:
-        print('togrep : results : epoch {0} ; mean accuracy {1} :\
+        log('togrep : results : epoch {0} ; mean accuracy {1} :\
               {2}'.format(epoch, eval_type, eval_acc))
 
     if eval_type == 'valid' and epoch <= params.n_epochs:
         if eval_acc > val_acc_best:
-            print('saving model at epoch {0}'.format(epoch))
+            log('saving model at epoch {0}'.format(epoch))
             if not os.path.exists(params.outputdir):
                 os.makedirs(params.outputdir)
             torch.save(nli_net.state_dict(), os.path.join(params.outputdir,
@@ -286,7 +302,7 @@ def evaluate(epoch, eval_type='valid', final_eval=False):
         else:
             if 'sgd' in params.optimizer:
                 optimizer.param_groups[0]['lr'] = optimizer.param_groups[0]['lr'] / params.lrshrink
-                print('Shrinking lr by : {0}. New lr = {1}'
+                log('Shrinking lr by : {0}. New lr = {1}'
                       .format(params.lrshrink,
                               optimizer.param_groups[0]['lr']))
                 if optimizer.param_groups[0]['lr'] < params.minlr:
@@ -311,9 +327,11 @@ while not stop_training and epoch <= params.n_epochs:
 # Run best model on test set.
 nli_net.load_state_dict(torch.load(os.path.join(params.outputdir, params.outputmodelname)))
 
-print('\nTEST : Epoch {0}'.format(epoch))
+log('\nTEST : Epoch {0}'.format(epoch))
 evaluate(1e6, 'valid', True)
 evaluate(0, 'test', True)
 
-# Save encoder instead of full model
-torch.save(nli_net.encoder.state_dict(), os.path.join(params.outputdir, params.outputmodelname + '.encoder.pkl'))
+logfile_final.write(str(final_output))
+
+# Save nli model (encoder+classifier)
+torch.save(nli_net.state_dict(), os.path.join(params.outputdir, params.outputmodelname + 'final.pkl'))

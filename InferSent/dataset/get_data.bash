@@ -8,7 +8,7 @@
 preprocess_exec="sed -f tokenizer.sed"
 
 SNLI='https://nlp.stanford.edu/projects/snli/snli_1.0.zip'
-MultiNLI='https://cims.nyu.edu/~sbowman/multinli/multinli_0.9.zip'
+MultiNLI='https://cims.nyu.edu/~sbowman/multinli/multinli_1.0.zip'
 
 
 ZIPTOOL="unzip"
@@ -41,9 +41,9 @@ rm -r SNLI/snli_1.0
 # MultiNLI
 # Test set not available yet : we define dev set as the "matched" set and the test set as the "mismatched"
 mkdir MultiNLI
-curl -Lo MultiNLI/multinli_0.9.zip $MultiNLI
-$ZIPTOOL MultiNLI/multinli_0.9.zip -d MultiNLI
-rm MultiNLI/multinli_0.9.zip
+curl -Lo MultiNLI/multinli_1.0.zip $MultiNLI
+$ZIPTOOL MultiNLI/multinli_1.0.zip -d MultiNLI
+rm MultiNLI/multinli_1.0.zip
 rm -r MultiNLI/__MACOSX
 
 
@@ -62,4 +62,3 @@ do
     cut -f3 $fpath.tok | $preprocess_exec > MultiNLI/s2.$split
     rm $fpath $fpath.tok
 done
-

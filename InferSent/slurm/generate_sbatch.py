@@ -26,6 +26,7 @@ singularity exec --nv --overlay $SCRATCH/overlay-50G-10M.ext3:ro /scratch/work/p
 source /ext3/env.sh
 conda activate
 
+cd ../..
 python train_nli.py {args}
 "
 """
@@ -39,7 +40,7 @@ for i, experiment in enumerate(hp_settings):
     experiment.append(("seed", random.randint(0, 9999)))
     args = " ".join(f"--{hp[0]} {hp[1]}" for hp in experiment)
     outputmodelname = ",".join(f"{hp[0]}={hp[1]}" for hp in experiment)
-    args += f"--outputmodelname {outputmodelname}"
+    args += f" --outputmodelname {outputmodelname}"
     script = header.format(args=args)
     with open(f"sbatch_scripts/train_infersent_{i}.slurm", "w") as f:
         f.write(script)

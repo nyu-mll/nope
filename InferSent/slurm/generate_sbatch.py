@@ -2,6 +2,7 @@ import itertools
 import random
 
 sweep = {
+    "nlipath": ["dataset/combined"],
     "batch_size": [32, 64, 128],
     "dpout_model": [0, 0.1],
     "nonlinear_fc": [0, 1],

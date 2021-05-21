@@ -16,7 +16,7 @@ for R in ["R1", "R2", "R3"]:
 for l, split in [(train, "train"), (test, "test"), (dev, "dev")]:
     df = pd.read_json(os.path.join("SNLI/snli_1.0", f"snli_1.0_{split}.jsonl"), orient="records", lines=True)
     df = df[["sentence1", "sentence2", "gold_label"]]
-    df = df["gold_label"].apply(lambda x: x in ["entailment", "contradiction", "neutral"])
+    df = df[df["gold_label"].apply(lambda x: x in ["entailment", "contradiction", "neutral"])]
     l.append(df)
 
 for l, split in [(train, "train"), (test, "dev_mismatched"), (dev, "dev_matched")]:

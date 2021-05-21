@@ -90,7 +90,7 @@ dat_all.target = rbind(dat_pilot.target, dat_main.target, dat_main_reannotations
 
 # remove one annotation from 2 items that were accidentally annotated 6 times
 dat_all.target = dat_all.target %>% 
-  filter(!(anon_id == 144 & id == 2004)) %>%
+  filter(!(anon_id == 81 & id == 2004)) %>%
   filter(!(anon_id == 104 & id == "adv_364"))
   
 

@@ -12,6 +12,7 @@ for R in ["R1", "R2", "R3"]:
         df = df[["context", "hypothesis", "label"]]
         df = df.rename({"context": "sentence1", "hypothesis": "sentence2", "label": "gold_label"}, axis=1)
         df["gold_label"] = df["gold_label"].apply(lambda x: "entailment" if x=="e" else "neutral" if x=="n" else "contradiction")
+        df = df[df["gold_label"].apply(lambda x: x in ["entailment", "contradiction", "neutral"])]
         l.append(df)
 
 for l, split in [(train, "train"), (test, "test"), (dev, "dev")]:
@@ -23,11 +24,13 @@ for l, split in [(train, "train"), (test, "test"), (dev, "dev")]:
 for l, split in [(train, "train"), (test, "dev_mismatched"), (dev, "dev_matched")]:
     df = pd.read_json(os.path.join("MultiNLI/multinli_1.0", f"multinli_1.0_{split}.jsonl"), orient="records", lines=True)
     df = df[["sentence1", "sentence2", "gold_label"]]
+    df = df[df["gold_label"].apply(lambda x: x in ["entailment", "contradiction", "neutral"])]
     l.append(df)
 
 train = pd.concat(train)
 test = pd.concat(test)
 dev = pd.concat(dev)
+
 
 if not os.path.exists("combined"):
     os.mkdir("combined")

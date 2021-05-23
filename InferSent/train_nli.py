@@ -331,7 +331,7 @@ log('\nTEST : Epoch {0}'.format(epoch))
 evaluate(1e6, 'valid', True)
 evaluate(0, 'test', True)
 
-logfile_final.write(str(final_output))
+logfile_final.write(str(final_output) + "\n")
 
 # Save nli model (encoder+classifier)
-torch.save(nli_net.state_dict(), os.path.join(params.outputdir, params.outputmodelname + 'final.pkl'))
+torch.save(nli_net.state_dict(), os.path.join(params.outputdir, params.outputmodelname + '.final.pkl'))

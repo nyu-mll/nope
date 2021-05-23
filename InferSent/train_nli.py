@@ -68,6 +68,8 @@ params, _ = parser.parse_known_args()
 if not params.cpu:
     torch.cuda.set_device(params.gpu_id)
 
+if not os.path.exists(params.logdir):
+    os.makedirs(params.logdir)
 logfile = open(os.path.join(params.logdir, params.outputmodelname + ".log"), "w")
 logfile_final = open(os.path.join(params.logdir, params.outputmodelname + "log.final"), "w")
 def log(s):

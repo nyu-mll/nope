@@ -1,6 +1,7 @@
 import itertools
 import random
 import argparse
+import os
 
 parser = argparse.ArgumentParser(description="Generate a sweep of sbatch scripts")
 
@@ -8,6 +9,8 @@ parser = argparse.ArgumentParser(description="Generate a sweep of sbatch scripts
 parser.add_argument("--nlipath", type=str, default=None, help="NLI data path")
 parser.add_argument("--outputdir", type=str, default=None, help="Output directory")
 parser.add_argument("--logdir", type=str, default=None, help="Logs directory")
+parser.add_argument("--sbatchdir", type=str, default=None, help="Sbatch scripts directory")
+parser.add_argument("--jobname", type=str, default=None)
 
 parser.add_argument("--encoder_type", nargs='?', default=None, help="see list of encoders")
 parser.add_argument("--batch_size", nargs='*', type=int, default=None)
@@ -35,7 +38,7 @@ for k in sweep:
 # }
 
 header = """#!/bin/bash
-#SBATCH --job-name=infersent
+#SBATCH --job-name={jobname}
 #SBATCH --open-mode=append
 #SBATCH --output=./%j_%x.out
 #SBATCH --error=./%j_%x.err
@@ -62,11 +65,13 @@ for hp in sweep:
 hp_settings = [list(x) for x in itertools.product(*hps)]
 for i, experiment in enumerate(hp_settings):
     experiment.append(("seed", random.randint(0, 9999)))
-    args = " ".join(f"--{hp[0]} {hp[1]}" for hp in experiment)
-    outputmodelname = ",".join(f"{hp[0]}={hp[1]}" for hp in experiment if hp[0] not in ["nlipath", "outputdir", "logdir"])
-    args += f" --outputmodelname {outputmodelname}"
-    script = header.format(args=args)
-    with open(f"sbatch_scripts/train_infersent_{i}.slurm", "w") as f:
+    args_str = " ".join(f"--{hp[0]} {hp[1]}" for hp in experiment if hp[0] not in ["jobname", "sbatchdir"])
+    outputmodelname = ",".join(f"{hp[0]}={hp[1]}" for hp in experiment if hp[0] not in ["nlipath", "outputdir", "logdir", "sbatchdir"])
+    args_str += f" --outputmodelname {outputmodelname}"
+    script = header.format(jobname=args.jobname, args=args_str)
+    if not os.path.exists(args.sbatchdir):
+        os.makedirs(args.sbatchdir)
+    with open(f"{args.sbatchdir}/train_{args.jobname}_{i}.slurm", "w") as f:
         f.write(script)
 
 

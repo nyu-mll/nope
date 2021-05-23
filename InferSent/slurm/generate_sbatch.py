@@ -1,12 +1,29 @@
 import itertools
 import random
+import argparse
 
-sweep = {
-    "batch_size": [32, 64],
-    "dpout_model": [0, 0.1],
-    "enc_lstm_dim": [1024, 2048],
-    "fc_dim": [256, 512]
-}
+parser = argparse.ArgumentParser(description="Generate a sweep of sbatch scripts")
+parser.add_argument("--encoder_type", type=str, default=None, help="see list of encoders")
+parser.add_argument("--batch_size", nargs='*', type=int, default=None)
+parser.add_argument("--dpout_model", nargs='*', type=float, default=None)
+parser.add_argument("--enc_lstm_dim", nargs='*', type=int, default=None)
+parser.add_argument("--fc_dim", nargs='*', type=int, default=None)
+parser.add_argument("--pool_type", nargs='*', type=str, default=None, help="max or mean or both")
+parser.add_argument("--project_bow", nargs='*', type=int, default=None)
+
+args = parser.parse_args()
+
+args_dict = args.__dict__
+sweep = {k: args_dict[k] for k in args_dict if args_dict[k] != None}
+for k in sweep:
+    if type(sweep[k]) != list:
+        sweep[k] = [sweep[k]]
+# sweep = {
+#     "batch_size": [32, 64],
+#     "dpout_model": [0, 0.1],
+#     "enc_lstm_dim": [1024, 2048],
+#     "fc_dim": [256, 512],
+# }
 
 header = """#!/bin/bash
 #SBATCH --job-name=infersent

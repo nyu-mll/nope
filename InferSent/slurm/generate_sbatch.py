@@ -2,12 +2,10 @@ import itertools
 import random
 
 sweep = {
-    "batch_size": [32, 64, 128],
+    "batch_size": [32, 64],
     "dpout_model": [0, 0.1],
-    "nonlinear_fc": [0, 1],
     "enc_lstm_dim": [1024, 2048],
-    "n_enc_layers": [1, 3, 5],
-    "fc_dim": [128, 512]
+    "fc_dim": [256, 512]
 }
 
 header = """#!/bin/bash

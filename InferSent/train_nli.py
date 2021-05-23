@@ -48,6 +48,7 @@ parser.add_argument("--n_enc_layers", type=int, default=1, help="encoder num lay
 parser.add_argument("--fc_dim", type=int, default=512, help="nhid of fc layers")
 parser.add_argument("--n_classes", type=int, default=3, help="entailment/neutral/contradiction")
 parser.add_argument("--pool_type", type=str, default='max', help="max or mean")
+parser.add_argument("--project_bow", type=int, default=0, help="Whether to add a tanh layer before pooling word embeddings")
 
 # gpu
 parser.add_argument("--gpu_id", type=int, default=0, help="GPU ID")
@@ -120,13 +121,15 @@ config_nli_model = {
     'nonlinear_fc'   :  params.nonlinear_fc   ,
     'encoder_type'   :  params.encoder_type   ,
     'use_cuda'       :  not params.cpu        ,
+    'project_bow'    :  params.project_bow
 
 }
 
 # model
 encoder_types = ['InferSent', 'BLSTMprojEncoder', 'BGRUlastEncoder',
                  'InnerAttentionMILAEncoder', 'InnerAttentionYANGEncoder',
-                 'InnerAttentionNAACLEncoder', 'ConvNetEncoder', 'LSTMEncoder']
+                 'InnerAttentionNAACLEncoder', 'ConvNetEncoder', 'LSTMEncoder',
+                 'BOW']
 assert params.encoder_type in encoder_types, "encoder_type must be in " + \
                                              str(encoder_types)
 nli_net = NLINet(config_nli_model)

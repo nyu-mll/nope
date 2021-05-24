@@ -53,7 +53,7 @@ singularity exec --nv --overlay $SCRATCH/overlay-50G-10M.ext3:ro /scratch/work/p
 source /ext3/env.sh
 conda activate
 
-cd $SCRATCH/pragmatics_dataset/InferSent
+cd $SCRATCH/presupposition_dataset/InferSent
 python train_nli.py {args}
 "
 """

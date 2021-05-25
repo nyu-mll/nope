@@ -67,6 +67,8 @@ for i, experiment in enumerate(hp_settings):
     experiment.append(("seed", random.randint(0, 9999)))
     args_str = " ".join(f"--{hp[0]} {hp[1]}" for hp in experiment if hp[0] not in ["jobname", "sbatchdir"])
     outputmodelname = ",".join(f"{hp[0]}={hp[1]}" for hp in experiment if hp[0] not in ["nlipath", "outputdir", "logdir", "sbatchdir"])
+    dataset_name = ",dataset=mnli" if "mnli" in args.nlipath else ",dataset=combined" if "combined" in args.nlipath else ""
+    outputmodelname += dataset_name
     args_str += f" --outputmodelname {outputmodelname}"
     script = header.format(jobname=args.jobname, args=args_str)
     if not os.path.exists(args.sbatchdir):

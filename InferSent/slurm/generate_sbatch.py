@@ -58,11 +58,14 @@ for hp in sweep:
 hp_settings = [list(x) for x in itertools.product(*hps)]
 for i, experiment in enumerate(hp_settings):
     for j in range(args.n_restarts):
-        experiment.append(("seed", random.randint(0, 9999)))
+        seed = random.randint(0, 9999)
+        # experiment.append(("seed", random.randint(0, 9999)))
         args_str = " ".join(f"--{hp[0]} {hp[1]}" for hp in experiment if hp[0] not in ["jobname", "sbatchdir"])
         outputmodelname = ",".join(f"{hp[0]}={hp[1]}" for hp in experiment if hp[0] not in ["nlipath", "outputdir", "logdir", "sbatchdir"])
         dataset_name = ",dataset=mnli" if "mnli" in args.nlipath else ",dataset=combined" if "combined" in args.nlipath else ""
         outputmodelname += dataset_name
+        outputmodelname += f",seed={seed}"
+        args_str += f" --seed {seed}"
         args_str += f" --outputmodelname {outputmodelname}"
         script = header.format(jobname=args.jobname, args=args_str)
         if not os.path.exists(args.sbatchdir):

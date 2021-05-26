@@ -19,23 +19,16 @@ parser.add_argument("--enc_lstm_dim", nargs='*', type=int, default=None)
 parser.add_argument("--fc_dim", nargs='*', type=int, default=None)
 parser.add_argument("--pool_type", nargs='*', type=str, default=None, help="max or mean or both")
 parser.add_argument("--project_bow", nargs='*', type=int, default=None)
+parser.add_argument("--n_restarts", type=int, default=1, help="number of restarts for each HP setting")
 
 
 args = parser.parse_args()
 
 args_dict = args.__dict__.copy()
-# for k in ["nlipath", "outputdir", "logdir"]:
-#     args_dict.pop(k)
 sweep = {k: args_dict[k] for k in args_dict if args_dict[k] != None}
 for k in sweep:
     if type(sweep[k]) != list:
         sweep[k] = [sweep[k]]
-# sweep = {
-#     "batch_size": [32, 64],
-#     "dpout_model": [0, 0.1],
-#     "enc_lstm_dim": [1024, 2048],
-#     "fc_dim": [256, 512],
-# }
 
 header = """#!/bin/bash
 #SBATCH --job-name={jobname}
@@ -64,16 +57,18 @@ for hp in sweep:
 
 hp_settings = [list(x) for x in itertools.product(*hps)]
 for i, experiment in enumerate(hp_settings):
-    experiment.append(("seed", random.randint(0, 9999)))
-    args_str = " ".join(f"--{hp[0]} {hp[1]}" for hp in experiment if hp[0] not in ["jobname", "sbatchdir"])
-    outputmodelname = ",".join(f"{hp[0]}={hp[1]}" for hp in experiment if hp[0] not in ["nlipath", "outputdir", "logdir", "sbatchdir"])
-    dataset_name = ",dataset=mnli" if "mnli" in args.nlipath else ",dataset=combined" if "combined" in args.nlipath else ""
-    outputmodelname += dataset_name
-    args_str += f" --outputmodelname {outputmodelname}"
-    script = header.format(jobname=args.jobname, args=args_str)
-    if not os.path.exists(args.sbatchdir):
-        os.makedirs(args.sbatchdir)
-    with open(f"{args.sbatchdir}/train_{args.jobname}_{i}.slurm", "w") as f:
-        f.write(script)
+    for j in range(args.n_restarts):
+        experiment.append(("seed", random.randint(0, 9999)))
+        args_str = " ".join(f"--{hp[0]} {hp[1]}" for hp in experiment if hp[0] not in ["jobname", "sbatchdir"])
+        outputmodelname = ",".join(f"{hp[0]}={hp[1]}" for hp in experiment if hp[0] not in ["nlipath", "outputdir", "logdir", "sbatchdir"])
+        dataset_name = ",dataset=mnli" if "mnli" in args.nlipath else ",dataset=combined" if "combined" in args.nlipath else ""
+        outputmodelname += dataset_name
+        args_str += f" --outputmodelname {outputmodelname}"
+        script = header.format(jobname=args.jobname, args=args_str)
+        if not os.path.exists(args.sbatchdir):
+            os.makedirs(args.sbatchdir)
+        suffix = str(i) if args.n_restarts == 1 else str(i) + "." + str(j)
+        with open(f"{args.sbatchdir}/train_{args.jobname}_{suffix}.slurm", "w") as f:
+            f.write(script)
 
 

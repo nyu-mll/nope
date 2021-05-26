@@ -33,6 +33,7 @@ def get_word_dict(sentences):
     word_dict['<s>'] = ''
     word_dict['</s>'] = ''
     word_dict['<p>'] = ''
+    word_dict['</p>'] = ''
     return word_dict
 
 

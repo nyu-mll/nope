@@ -99,11 +99,14 @@ word_vec = build_vocab(train['s1'] + train['s2'] +
                        valid['s1'] + valid['s2'] +
                        test['s1'] + test['s2'], params.word_emb_path)
 
+bos, eos = ("<s>", "</s>") if params.version == 1 else ("<p>", "</p>")
+
+
 for split in ['s1', 's2']:
     for data_type in ['train', 'valid', 'test']:
-        eval(data_type)[split] = np.array([['<s>'] +
+        eval(data_type)[split] = np.array([[bos] +
             [word for word in sent.split() if word in word_vec] +
-            ['</s>'] for sent in eval(data_type)[split]])
+            [eos] for sent in eval(data_type)[split]])
 
 
 """

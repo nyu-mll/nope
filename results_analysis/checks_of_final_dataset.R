@@ -8,11 +8,19 @@ dat = read.csv("../annotated_corpus/main_corpus.individual_ratings.csv",stringsA
 
 # -------------------------------------------------------------
 # CHECK IF EACH PREMISE-HYPOTHESIS PAIR HAS 5 RATINGS
-dat2<-dat%>%
+dat2a<-dat%>%
   group_by(id,type)%>%
   summarise(count=n())
 # if everything is correct, this should print 0
 print(nrow(filter(dat2,count!=5)))
+
+# -------------------------------------------------------------
+# CHECK THAT NO WORKER GIVES MORE THAN 2 RATINGS FOR THE SAME ITEM
+dat2b<-dat%>%
+  group_by(id,type,anon_id)%>%
+  summarise(count=n())
+# if everything is correct, this should print 0
+print(nrow(filter(dat2,count!=1)))
 
 # -------------------------------------------------------------
 # CHECK HOW MANY ITEMS EACH ANNOTATOR RATED
@@ -27,8 +35,9 @@ dat_02<-read.csv("../results/02_judgments/trials.csv", stringsAsFactors = F)
 dat_03<-read.csv("../results/03_judgment_reannotations/trials.csv", stringsAsFactors = F)
 dat_04<-read.csv("../results/04_judgments_part2/trials.csv", stringsAsFactors = F)
 dat_05<-read.csv("../results/05_judgment_reannotations/trials.csv", stringsAsFactors = F)
+dat_06<-read.csv("../results/06_judgment_reannotations2/trials.csv", stringsAsFactors = F)
 
-all_raw_dats <- rbind(dat_02,dat_03,dat_04,dat_05)
+all_raw_dats <- rbind(dat_02,dat_03,dat_04,dat_05,dat_06)
 
 dats2 <- all_raw_dats %>%
   filter(type=="filler")%>%

@@ -68,7 +68,8 @@ write.csv(new_subj_info,"01_prescreener/subj_info_part2.csv", row.names=FALSE)
 #this_run = "03_judgment_reannotations"
 #this_run = "04_judgments_part2"
 #this_run = "05_judgment_reannotations"
-this_run = "06_judgment_reannotations2"
+#this_run = "06_judgment_reannotations2"
+this_run = "07_judgment_reannotations3"
 files = list.files(paste0(SECRET_dir,this_run),pattern = "*.json", full.names = T)
 
 trials = NULL
@@ -94,8 +95,8 @@ anon_subj_info = anonymize(subj_info,anon_ids)
 # This participant put their worker id in the comments box for some reason
 #anon_subj_info$comments[anon_subj_info$anon_id=='18'] = NA  # use with 02_judgments and 04_judgments_part2
 
-write.csv(anon_trials,"06_judgment_reannotations2/trials.csv", row.names=FALSE)
-write.csv(anon_subj_info,"06_judgment_reannotations2/subj_info.csv", row.names=FALSE)
+write.csv(anon_trials,"07_judgment_reannotations3/trials.csv", row.names=FALSE)
+write.csv(anon_subj_info,"07_judgment_reannotations3/subj_info.csv", row.names=FALSE)
 
 # CHECK COMPLETION TIMES
 #x<-anon_trials[!duplicated(anon_trials[c('Answer.time_in_minutes')]),] %>% select(anon_id,Answer.time_in_minutes) 

@@ -17,7 +17,7 @@ for R in ["r1", "r2", "r3"]:
         df = df[["premise", "hypothesis", "label"]]
         # df = df.rename({"context": "sentence1", "hypothesis": "sentence2", "label": "gold_label"}, axis=1)
         df["label"] = df["label"].apply(lambda x: "entailment" if x=="e" else "neutral" if x=="n" else "contradiction")
-        df["source"] = f"ANLI_{R}"
+        df["source"] = f"ANLI_{R}_{split}"
         if split == "train":
             n_copies = 20 if R=="r2" else 10
             df = pd.concat([df.copy() for _ in range(n_copies)])
@@ -28,21 +28,21 @@ for l, split in [(train, "train"), (test, "test"), (dev, "dev")]:
     df = pd.read_json(os.path.join("snli", f"{split}.jsonl"), orient="records", lines=True)
     df = df[["premise", "hypothesis", "label"]]
     df["label"] = df["label"].apply(lambda x: "entailment" if x=="e" else "neutral" if x=="n" else "contradiction")
-    df["source"] = "SNLI"
+    df["source"] = f"SNLI_{split}"
     l.append(df)
 
 for l, split in [(train, "train"), (test, "test"), (dev, "dev")]:
     df = pd.read_json(os.path.join("fever_nli", f"{split}.jsonl"), orient="records", lines=True)
     df = df[["premise", "hypothesis", "label"]]
     df["label"] = df["label"].apply(lambda x: "entailment" if x=="e" else "neutral" if x=="n" else "contradiction")
-    df["source"] = "FEVER"
+    df["source"] = f"FEVER_{split}"
     l.append(df)
 
 for l, split in [(train, "train"), (dev, "mm_dev"), (dev, "m_dev")]:
     df = pd.read_json(os.path.join("mnli", f"{split}.jsonl"), orient="records", lines=True)
     df = df[["premise", "hypothesis", "label"]]
     df["label"] = df["label"].apply(lambda x: "entailment" if x=="e" else "neutral" if x=="n" else "contradiction")
-    df["source"] = "MNLI"
+    df["source"] = f"MNLI_{split}"
     l.append(df)
 
 train = pd.concat(train)
@@ -50,11 +50,11 @@ test = pd.concat(test)
 dev = pd.concat(dev)
 
 
-#
-# for dataset in [train, test, dev]:
-#     for field in ["hypothesis", "premise"]:
-#         dataset[field] = dataset[field].apply(lambda s:  ' '.join(word_tokenize(s)).replace(" n't ", "n 't "))
-#     print(dataset.head().to_string())
+
+for dataset in [train, test, dev]:
+    for field in ["hypothesis", "premise"]:
+        dataset[field] = dataset[field].apply(lambda s:  ' '.join(word_tokenize(s)).replace(" n't ", "n 't "))
+    print(dataset.head().to_string())
 
 
 if not os.path.exists(f"combined"):

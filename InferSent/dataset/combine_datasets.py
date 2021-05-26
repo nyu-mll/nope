@@ -2,6 +2,10 @@ import pandas as pd
 import os
 import itertools
 import re
+from nltk.tokenize import word_tokenize
+
+
+
 
 train = []
 test = []
@@ -45,15 +49,23 @@ train = pd.concat(train)
 test = pd.concat(test)
 dev = pd.concat(dev)
 
+
+#
+# for dataset in [train, test, dev]:
+#     for field in ["hypothesis", "premise"]:
+#         dataset[field] = dataset[field].apply(lambda s:  ' '.join(word_tokenize(s)).replace(" n't ", "n 't "))
+#     print(dataset.head().to_string())
+
+
 if not os.path.exists(f"combined"):
     os.mkdir(f"combined")
 
-train.to_json(f"combined/train.jsonl", orient="records", lines=True)
-test.to_json(f"combined/test.jsonl", orient="records", lines=True)
-dev.to_json(f"combined/dev.jsonl", orient="records", lines=True)
+# train.to_json(f"combined/train.jsonl", orient="records", lines=True)
+# test.to_json(f"combined/test.jsonl", orient="records", lines=True)
+# dev.to_json(f"combined/dev.jsonl", orient="records", lines=True)
 
 for split, field in itertools.product([("train", train), ("test", test), ("dev", dev)], ["premise", "hypothesis", "label"]):
-    field_short = "s1" if field=="hypothesis" else "s2" if field=="premise" else "labels"
+    field_short = "s1" if field=="premise" else "s2" if field=="hypothesis" else "labels"
     with open(f"combined/{field_short}.{split[0]}", "w") as f:
         for line in list(split[1][field]):
             f.write(re.sub(r"[\n\r]", " ", line) + "\n")

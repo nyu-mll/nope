@@ -27,7 +27,7 @@ parser.add_argument("--nlipath", type=str, default='dataset/SNLI/', help="NLI da
 parser.add_argument("--outputdir", type=str, default='savedir/', help="Output directory")
 parser.add_argument("--logdir", type=str, default='logs/', help="Logs directory")
 parser.add_argument("--outputmodelname", type=str, default='model.pickle')
-parser.add_argument("--word_emb_path", type=str, default="dataset/GloVe/glove.840B.300d.txt", help="word embedding file path")
+parser.add_argument("--word_emb_path", type=str, default="dataset/fastText/crawl-300d02M.vec", help="word embedding file path")
 
 # training
 parser.add_argument("--n_epochs", type=int, default=20)
@@ -49,6 +49,7 @@ parser.add_argument("--fc_dim", type=int, default=512, help="nhid of fc layers")
 parser.add_argument("--n_classes", type=int, default=3, help="entailment/neutral/contradiction")
 parser.add_argument("--pool_type", type=str, default='max', help="max or mean")
 parser.add_argument("--project_bow", type=int, default=0, help="Whether to add a tanh layer before pooling word embeddings")
+parser.add_argument("--version", type=int, default=2, help="InferSent version (1 or 2)")
 
 # gpu
 parser.add_argument("--gpu_id", type=int, default=0, help="GPU ID")
@@ -123,7 +124,8 @@ config_nli_model = {
     'nonlinear_fc'   :  params.nonlinear_fc   ,
     'encoder_type'   :  params.encoder_type   ,
     'use_cuda'       :  not params.cpu        ,
-    'project_bow'    :  params.project_bow
+    'project_bow'    :  params.project_bow,
+    'version'        :  params.version
 
 }
 

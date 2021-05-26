@@ -27,7 +27,7 @@ parser.add_argument("--nlipath", type=str, default='dataset/SNLI/', help="NLI da
 parser.add_argument("--outputdir", type=str, default='savedir/', help="Output directory")
 parser.add_argument("--logdir", type=str, default='logs/', help="Logs directory")
 parser.add_argument("--outputmodelname", type=str, default='model.pickle')
-parser.add_argument("--word_emb_path", type=str, default="dataset/fastText/crawl-300d02M.vec", help="word embedding file path")
+parser.add_argument("--word_emb_path", type=str, default="dataset/fastText/crawl-300d-2M.vec", help="word embedding file path")
 
 # training
 parser.add_argument("--n_epochs", type=int, default=20)
@@ -70,9 +70,9 @@ if not params.cpu:
     torch.cuda.set_device(params.gpu_id)
 
 if not os.path.exists(params.logdir):
-    os.makedirs(params.logdir)
+    os.makedirs(params.logdir, exist_ok=True)
 logfile = open(os.path.join(params.logdir, params.outputmodelname + ".log"), "w")
-logfile_final = open(os.path.join(params.logdir, params.outputmodelname + "log.final"), "w")
+logfile_final = open(os.path.join(params.logdir, params.outputmodelname + ".log.final"), "w")
 def log(s):
     print(s)
     logfile.write(str(s) + "\n")
@@ -302,7 +302,7 @@ def evaluate(epoch, eval_type='valid', final_eval=False):
         if eval_acc > val_acc_best:
             log('saving model at epoch {0}'.format(epoch))
             if not os.path.exists(params.outputdir):
-                os.makedirs(params.outputdir)
+                os.makedirs(params.outputdir, exist_ok=True)
             torch.save(nli_net.state_dict(), os.path.join(params.outputdir,
                        params.outputmodelname))
             val_acc_best = eval_acc

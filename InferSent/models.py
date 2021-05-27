@@ -786,7 +786,7 @@ class BOW(nn.Module):
         # Pooling
         if self.pool_type == "mean":
             sent_len = torch.FloatTensor(sent_len.copy()).unsqueeze(1).cuda()
-            emb = torch.sum(h, 0).squeeze(0)
+            emb = torch.sum(h, 0)
             emb = emb / sent_len.expand_as(emb)
         elif self.pool_type == "max":
             if not self.max_pad:

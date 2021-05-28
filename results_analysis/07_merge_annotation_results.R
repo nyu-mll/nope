@@ -147,9 +147,24 @@ dat_main_rereannotations.fillers = dat_main_rereannotations %>% filter(type == "
 dat_all.target = rbind(dat_all.target, dat_main_rereannotations.target)
 dat_all.fillers = rbind(dat_all.fillers, dat_main_rereannotations.fillers)
 
+
+dat_main_rereannotations2 = read.csv("../results/07_judgment_reannotations3/trials.csv")
+dat_main_rereannotations2.target = dat_main_rereannotations2 %>% filter(type != "filler")
+dat_main_rereannotations2.fillers = dat_main_rereannotations2 %>% filter(type == "filler") %>%
+  mutate(expected_resp = case_when(str_detect(id, "e_filler") ~ "entailment",
+                                   str_detect(id, "c_filler") ~ "contradiction",
+                                   str_detect(id, 'n_filler') ~ "neutral"))
+
+
+dat_all.target = rbind(dat_all.target, dat_main_rereannotations2.target)
+dat_all.fillers = rbind(dat_all.fillers, dat_main_rereannotations2.fillers)
+
+#remove duplicates
+dat_all.target = dat_all.target %>% distinct(id, type, anon_id, .keep_all=T) 
+
 dat_all.target_no_prior = dat_all.target %>% filter(type != "target-prior")
 
 
-write.csv(dat_all.target_no_prior, file="../annotated_corpus/main_corpus.individual_ratings.csv")
-write.csv(dat_all.target_prior, file="../annotated_corpus/priors.individual_ratings.csv")
-write.csv(dat_all.fillers, file="../annotated_corpus/fillers.individual_ratings.csv")
+write.csv(dat_all.target_no_prior %>% arrange(id, type), file="../annotated_corpus/main_corpus.individual_ratings.csv")
+write.csv(dat_all.target_prior %>% arrange(id, type), file="../annotated_corpus/priors.individual_ratings.csv")
+write.csv(dat_all.fillers %>% arrange(id, type), file="../annotated_corpus/fillers.individual_ratings.csv")

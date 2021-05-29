@@ -60,12 +60,12 @@ View(data)
 # ---------------------------------------------------
 # bootstrapping for distribution & CIs
 
-par(mar=c(2,2,2,2))
-par(mfrow = c(length(triggers), 2))
+#par(mar=c(2,2,2,2))
+#par(mfrow = c(length(triggers), 2))
 
 n <- length(triggers) * length(types)
-list_plot <- vector(mode = "list", length = n)
-names(list_plot) <- paste("plot", 1:n)
+#list_plot <- vector(mode = "list", length = n)
+#names(list_plot) <- paste("plot", 1:n)
 
 boots<-vector(mode = "list", length = n)
 ci_lows<-vector(mode = "list", length = n)
@@ -114,6 +114,7 @@ for(i in c(1:n)){
 # plotting
 (plt<-ggplot(data=dat_boots, aes(x=val))+
   geom_histogram(binwidth = 0.01)+
+  xlab("Krippendorf's alpha value")+
   facet_grid(trigger~type))
 
 

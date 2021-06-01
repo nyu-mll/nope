@@ -1,0 +1,167 @@
+library(tidyverse)
+
+this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
+setwd(this.dir)
+
+set.seed(42)
+
+dat <- read.csv("../annotated_corpus/main_corpus.nli_labels.csv",stringsAsFactors = F)
+
+stims = read.csv("../experiments/stimuli/all_annotations_cleaned.csv")
+stims = stims %>% select(sent_id,trigger)
+
+# separate out info about which items are adversarial
+dat_sep <- dat %>%
+  separate(sent_id, c("id_num","adv"), sep = "_")%>%
+  mutate(adversarial = case_when(is.na(adv) ~ "non",
+                                 !is.na(adv) ~ "adv"))%>%
+  mutate(sent_id = case_when(adversarial=="non" ~ id_num,
+                        adversarial=="adv" ~ adv))%>%
+  select(-adv,-id_num)
+
+# add in trigger info
+dat2 <- merge(dat_sep,stims,by="sent_id")
+
+dat3<-dat2 %>%
+  mutate(label = case_when(label=="E" ~ "Entailment",
+                           label=="N" ~ "Neutral",
+                           label=="C" ~ "Contradiction"))%>%
+  mutate(type = case_when(type == "target-negated" ~ "negated",
+                          type == "target-original" ~ "original"))
+
+# --------- Aggregate NLI labels per trigger * type ----------------
+dat4 <- dat3 %>% filter(adversarial == "non")
+
+(plt.agg<-ggplot(data=dat4, aes(x=type, fill=label))+
+    geom_bar(position='fill')+
+    facet_wrap(~trigger)+
+    ylab("Proportion of responses in each label")+
+    ggtitle("Comparison of labels selected via majority vote of annotators")+
+    theme(plot.title = element_text(hjust = 0.5),
+          legend.position = c(0.85, 0.13))
+  )
+
+ggsave("figures/aggregate_labels.png",plt.agg,width=6.5,height=5)
+
+# --------- Now for adversarial examples ----------------
+
+dat5 <- dat3 %>% filter(adversarial == "adv")
+
+(plt.adv<-ggplot(data=dat5, aes(x=type, fill=label))+
+    geom_bar(position='fill')+
+    facet_wrap(~trigger)+
+    ylab("Proportion of responses in each label")+
+    ggtitle("Adversarial examples, with labels selected via majority vote of annotators")+
+    theme(plot.title = element_text(hjust = 0.5),
+          legend.position = c(0.85, 0.13))
+)
+
+ggsave("figures/adversarial_labels.png",plt.adv,width=6.5,height=5)
+
+# ------------ Calculate agreement with gold label --------------------------
+
+# make data easier to work with 
+long_dat = NULL
+
+for(j in c(1:nrow(dat3))){
+  temp_dat = dat3[j,]
+  these_labels = temp_dat$all_labels
+  these_workers = temp_dat$workerids
+  these_ratings = temp_dat$ratings
+  list_labels = strsplit(these_labels, ",")[[1]]
+  list_workers = strsplit(these_workers, ",")[[1]]
+  list_ratings = strsplit(these_ratings, ",")[[1]]
+  for(i in c(1:5)){
+    this_temp <- temp_dat %>%
+      select(sent_id, type, label, adversarial, trigger) %>%
+      rename("gold_label" = label)
+    this_temp$label = list_labels[i]
+    this_temp$worker = list_workers[i]
+    this_temp$rating = list_ratings[i]
+    long_dat = rbind(long_dat, this_temp)
+  }
+}
+
+long_dat2 <- long_dat %>%
+  mutate(label = case_when(label=="E" ~ "Entailment",
+                           label=="N" ~ "Neutral",
+                           label=="C" ~ "Contradiction"))%>%
+  mutate(acc = case_when(label == gold_label ~ 1,
+                         label != gold_label ~0))%>%
+  group_by(trigger)%>%
+  summarise(mean_acc = mean(acc))
+
+# overall (run without last two lines of above piping)
+mean(long_dat2$acc)
+
+
+# ------------ Calculate agreement, recomputing gold label from 4 people --------------------------
+
+aggr_dat = NULL
+
+nums = unique(long_dat$sent_id)
+types = unique(long_dat$type)
+triggers = unique(long_dat$trigger)
+advs = unique(long_dat$adversarial)
+
+for(n in c(1:length(nums))){
+  for(ty in c(1:length(types))){
+    for(tr in c(1:length(triggers))){
+      for(adv in c(1:length(advs))){
+        temp_dat = long_dat %>%
+          filter(sent_id == nums[n],
+                 type==types[ty],
+                 trigger==as.character(triggers[tr]),
+                 adversarial==advs[adv])
+        if(nrow(temp_dat)==5){
+          for(i in c(1:5)){
+            this_id = temp_dat$worker[i]
+            this_worker_label = temp_dat$label[temp_dat$worker==this_id]
+            new_temp_dat = temp_dat %>% filter(worker != this_id)
+            these_labels = new_temp_dat$label
+            freqs = as.data.frame(table(these_labels)) %>% filter(Freq > 2)
+            # if there's a winner, make that the gold label, otherwise just set gold to none
+            #if(nrow(freqs) > 0){
+            gold_label = as.character(freqs$these_labels[1])
+            #} else {
+            #  gold_label == "none"
+            #}
+            # remake data frame info needed
+            this_temp_dat = setNames(data.frame(matrix(ncol = 8, nrow = 1)), 
+                                     c("sent_id", "type", "trigger", "adversarial",
+                                       "gold_label", "worker_eval", "new_gold_label", "worker_label"))
+            this_temp_dat$sent_id = nums[n]
+            this_temp_dat$type = types[ty]
+            this_temp_dat$trigger = as.character(triggers[tr])
+            this_temp_dat$adversarial = advs[adv]
+            this_temp_dat$gold_label = as.character(unique(temp_dat$gold_label))
+            this_temp_dat$worker_eval = this_id
+            this_temp_dat$new_gold_label = gold_label
+            this_temp_dat$worker_label = this_worker_label
+            aggr_dat = rbind(aggr_dat, this_temp_dat)
+          }
+        } 
+      }
+    }
+  }
+}
+
+aggr_dat2 <- aggr_dat %>%
+  mutate(acc = case_when(new_gold_label == worker_label ~ 1,
+                         new_gold_label != worker_label ~ 0))%>%
+  group_by(trigger)%>%
+  summarise(mean_acc = mean(acc, na.rm=T))
+
+mean(aggr_dat2$acc,na.rm=T)
+
+# ------------ Count unanimous --------------------------
+
+is_same <- function(x) length(unique(x)) == 1
+unan_dat = NULL
+
+for(j in c(1:nrow(dat3))){
+  temp_dat = dat3[j,]
+  list_labels = strsplit(temp_dat$all_labels, ",")[[1]]
+  temp_dat$same_check = is_same(list_labels)
+  unan_dat = rbind(unan_dat, temp_dat)
+}

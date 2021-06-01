@@ -7,7 +7,13 @@ setwd(this.dir)
 
 
 mode <- function(codes){
-  which.max(tabulate(codes))
+  tbl = tabulate(codes)
+  md = which.max(tbl)
+  if (max(tbl) < (length(codes) / 2)) {
+    return (NA)
+  } else {
+    return (md)
+  }
 }
 
 theme_set(theme_bw())

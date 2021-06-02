@@ -1,4 +1,4 @@
-from pragmatics_dataset.InferSent.models import NLINet
+from models import NLINet
 import torch
 from data import get_nli, get_batch, build_vocab
 import argparse
@@ -19,7 +19,8 @@ params, _ = parser.parse_known_args()
 def load_model(model_path):
     params_model = get_params(model_path)
     nli_net = NLINet(params_model)
-    nli_net.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
+    nli_net.load_state_dict(torch.load(model_path))
+    print(nli_net.is_cuda())
     return nli_net, params_model
 
 
@@ -83,6 +84,6 @@ def evaluate_model(nli_net, s1, s2, labels, word_vec, batch_size, word_emb_dim=3
         pass
 
 
-nli_net, params_model = load_model("savedir/jobname=bow_combined,encoder_type=BOW,batch_size=128,fc_dim=256,pool_type=mean,n_restarts=4,dataset=combined,seed=445.final.pkl")
+nli_net, params_model = load_model("savedir/bow_combined/jobname=bow_combined,encoder_type=BOW,batch_size=128,fc_dim=256,pool_type=mean,n_restarts=4,dataset=combined,seed=445.final.pkl")
 s1, s2, labels, word_vec = prepare_data("dataset/combined/dev.jsonl")
 evaluate_model(nli_net, s1, s2, labels, word_vec, params_model['bsize'])

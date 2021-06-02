@@ -20,6 +20,8 @@ def load_model(model_path):
     params_model = get_params(model_path)
     nli_net = NLINet(params_model)
     nli_net.load_state_dict(torch.load(model_path))
+    nli_net.eval()
+    nli_net.encoder.to("cuda:0")
     nli_net.classifier.to("cuda:0")
     return nli_net, params_model
 
@@ -27,7 +29,7 @@ def load_model(model_path):
 def get_params(model_path):
 
     # extract parameters from checkpoint name
-    params = model_path.split(".")[0]
+    params = model_path[:-10]
     params = params.split("/")[-1]
     params = {p.split("=")[0]: p.split("=")[1] for p in params.split(",")}
 
@@ -47,9 +49,12 @@ def get_params(model_path):
         params['enc_lstm_dim'] = 1
         for k in ['batch_size', 'jobname', 'n_restarts', 'seed']:
             params.pop(k)
-    else:                           # i.e. if InferSent was used
+    else: # i.e. if InferSent was used
+        params['encoder_type'] = "InferSent"
         params['dpout_model'] = float(params['dpout_model'])
         params['enc_lstm_dim'] = int(params['enc_lstm_dim'])
+        params['n_enc_layers'] = 1
+        params['pool_type'] = "mean"
     return params
 
 
@@ -81,11 +86,12 @@ def evaluate_model(nli_net, s1, s2, labels, word_vec, batch_size, word_emb_dim=3
 
         output = nli_net((s1_batch, s1_len), (s2_batch, s2_len))
         pred = output.data.max(1)[1]
+        print(pred)
         preds.append(pred)
     preds = np.append(preds)
     return preds
 
 
-nli_net, params_model = load_model("savedir/bow_combined/jobname=bow_combined,encoder_type=BOW,batch_size=128,fc_dim=256,pool_type=mean,n_restarts=4,dataset=combined,seed=445.final.pkl")
+nli_net, params_model = load_model('savedir/infersent_combined/jobname=infersent_combined,batch_size=32,dpout_model=0.1,enc_lstm_dim=2048,fc_dim=512,n_restarts=1,dataset=combined,seed=687')
 s1, s2, labels, word_vec = prepare_data("dataset/combined/dev.jsonl")
 evaluate_model(nli_net, s1, s2, labels, word_vec, params_model['bsize'])

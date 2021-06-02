@@ -762,7 +762,7 @@ class BOW(nn.Module):
         # sent_len: [max_len, ..., min_len] (bsize)
         # sent: (seqlen x bsize x worddim)
         sent, sent_len = sent_tuple
-        h = self.projection(sent) if self.project_bow else sent
+        h = self.projection(sent) if self.project_bow else sent.cuda()
 
 
         # Pooling

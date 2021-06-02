@@ -20,7 +20,7 @@ def load_model(model_path):
     params_model = get_params(model_path)
     nli_net = NLINet(params_model)
     nli_net.load_state_dict(torch.load(model_path))
-    print(nli_net.is_cuda())
+    nli_net.classifier.to("cuda:0")
     return nli_net, params_model
 
 
@@ -72,7 +72,7 @@ def prepare_data(eval_data_path):
 
 
 def evaluate_model(nli_net, s1, s2, labels, word_vec, batch_size, word_emb_dim=300):
-
+    preds = []
     for stidx in range(0, len(s1), batch_size):
         s1_batch, s1_len = get_batch(s1[stidx:stidx + batch_size],
                                      word_vec, word_emb_dim)
@@ -81,7 +81,9 @@ def evaluate_model(nli_net, s1, s2, labels, word_vec, batch_size, word_emb_dim=3
 
         output = nli_net((s1_batch, s1_len), (s2_batch, s2_len))
         pred = output.data.max(1)[1]
-        pass
+        preds.append(pred)
+    preds = np.append(preds)
+    return preds
 
 
 nli_net, params_model = load_model("savedir/bow_combined/jobname=bow_combined,encoder_type=BOW,batch_size=128,fc_dim=256,pool_type=mean,n_restarts=4,dataset=combined,seed=445.final.pkl")

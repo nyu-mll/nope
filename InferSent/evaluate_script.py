@@ -51,7 +51,7 @@ def get_params(model_path):
         params['enc_lstm_dim'] = 1
         for k in ['batch_size', 'jobname', 'n_restarts', 'seed']:
             params.pop(k)
-    else:                           # i.e. if InferSent was used
+    else: # i.e. if InferSent was used
         params['encoder_type'] = "InferSent"
         params['dpout_model'] = float(params['dpout_model'])
         params['enc_lstm_dim'] = int(params['enc_lstm_dim'])
@@ -92,7 +92,6 @@ def evaluate_model(nli_net, s1, s2, labels, word_vec, batch_size, word_emb_dim=3
         preds.append(pred)
     # preds = np.append(preds)
     return preds
-
 
 
 # for sweep in os.listdir("savedir"):

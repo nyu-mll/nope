@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import itertools
 import re
-# from nltk.tokenize import word_tokenize
+from nltk.tokenize import word_tokenize
 
 
 

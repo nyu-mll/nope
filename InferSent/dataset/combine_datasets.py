@@ -31,7 +31,7 @@ for l, split in [(train, "train"), (test, "test"), (dev, "dev")]:
     df["source"] = f"SNLI_{split}"
     l.append(df)
 
-for l, split in [(train, "train"), (test, "test"), (dev, "dev")]:
+for l, split in [(train, "train")]:
     df = pd.read_json(os.path.join("fever_nli", f"{split}.jsonl"), orient="records", lines=True)
     df = df[["premise", "hypothesis", "label"]]
     df["label"] = df["label"].apply(lambda x: "entailment" if x=="e" else "neutral" if x=="n" else "contradiction")
@@ -49,8 +49,6 @@ train = pd.concat(train)
 test = pd.concat(test)
 dev = pd.concat(dev)
 
-
-
 for dataset in [train, test, dev]:
     for field in ["hypothesis", "premise"]:
         dataset[field] = dataset[field].apply(lambda s:  ' '.join(word_tokenize(s)).replace(" n't ", "n 't "))
@@ -60,9 +58,9 @@ for dataset in [train, test, dev]:
 if not os.path.exists(f"combined"):
     os.mkdir(f"combined")
 
-# train.to_json(f"combined/train.jsonl", orient="records", lines=True)
-# test.to_json(f"combined/test.jsonl", orient="records", lines=True)
-# dev.to_json(f"combined/dev.jsonl", orient="records", lines=True)
+train.to_json(f"combined/train_metadata.jsonl", orient="records", lines=True)
+test.to_json(f"combined/test_metadata.jsonl", orient="records", lines=True)
+dev.to_json(f"combined/dev_metadata.jsonl", orient="records", lines=True)
 
 for split, field in itertools.product([("train", train), ("test", test), ("dev", dev)], ["premise", "hypothesis", "label"]):
     field_short = "s1" if field=="premise" else "s2" if field=="hypothesis" else "labels"

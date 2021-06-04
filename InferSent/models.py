@@ -739,6 +739,7 @@ class BOW(nn.Module):
         self.enc_lstm_dim = config['enc_lstm_dim']      # NOTE: This is isn't an LSTM, I just don't want to change the name of this commandline argument
         self.version = 1 if 'version' not in config else config['version']
         self.project_bow = config['project_bow']
+        self.use_cuda = config['use_cuda']
 
         if self.project_bow:
             self.projection = nn.Sequential(nn.Linear(self.word_emb_dim, self.enc_lstm_dim), nn.Tanh())
@@ -757,18 +758,20 @@ class BOW(nn.Module):
             self.moses_tok = True
 
     def is_cuda(self):
-        return True
+        return self.use_cuda
 
     def forward(self, sent_tuple):
         # sent_len: [max_len, ..., min_len] (bsize)
         # sent: (seqlen x bsize x worddim)
         sent, sent_len = sent_tuple
-        h = self.projection(sent) if self.project_bow else sent.cuda()
+        h = self.projection(sent) if self.project_bow else sent
+        h = h.cuda() if self.is_cuda() else h
 
 
         # Pooling
         if self.pool_type == "mean":
-            sent_len = torch.FloatTensor(sent_len.copy()).unsqueeze(1).cuda()
+            sent_len = torch.FloatTensor(sent_len.copy()).unsqueeze(1)
+            sent_len = sent_len.cuda() if self.is_cuda() else sent_len
             emb = torch.sum(h, 0)
             emb = emb / sent_len.expand_as(emb)
         elif self.pool_type == "max":

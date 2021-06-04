@@ -58,9 +58,9 @@ for dataset in [train, test, dev]:
 if not os.path.exists(f"combined"):
     os.mkdir(f"combined")
 
-train.to_json(f"combined/train_metadata.jsonl", orient="records", lines=True)
-test.to_json(f"combined/test_metadata.jsonl", orient="records", lines=True)
-dev.to_json(f"combined/dev_metadata.jsonl", orient="records", lines=True)
+train.to_json(f"combined/train_metadata.jsonl", orient="records", lines=True, force_ascii=False)
+test.to_json(f"combined/test_metadata.jsonl", orient="records", lines=True, force_ascii=False)
+dev.to_json(f"combined/dev_metadata.jsonl", orient="records", lines=True, force_ascii=False)
 
 for split, field in itertools.product([("train", train), ("test", test), ("dev", dev)], ["premise", "hypothesis", "label"]):
     field_short = "s1" if field=="premise" else "s2" if field=="hypothesis" else "labels"

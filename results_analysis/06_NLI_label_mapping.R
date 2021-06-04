@@ -29,60 +29,110 @@ dat %>% ggplot(aes(x=response, col = expected_resp, fill=expected_resp)) +
   facet_wrap(~expected_resp, scales = "free_y") +
   theme(legend.position = "bottom")
 
+workerids = unique(dat$anon_id)
+workerid_thresholds_ent = data.frame()
 
-dat3 <- dat %>% filter(expected_resp != "contradiction") %>%
-  filter(response > 50) %>%
-  mutate(expected_resp = factor(expected_resp))
+for (wid in workerids)  {
+
+  dat3 <- dat %>% filter(expected_resp != "contradiction") %>%
+    filter(response > 50) %>%
+    mutate(expected_resp = factor(expected_resp))
+  
+  dat3.other = dat3 %>% filter(anon_id != wid)
+  dat3.this = dat3 %>% filter(anon_id == wid)
+  
+  n.this = nrow(dat3.this)
+  if (n.this > 0) {
+    dat3.this = dat3.this[rep(1:n.this, times=50),]
+    dat3 = rbind(dat3.other, dat3.this)
+    
+  } else {
+    dat3 = dat3.other
+  }
+  
+  
+  n_e = sum(dat3$expected_resp=="entailment")
+  n_n = sum(dat3$expected_resp=="neutral")
+  
+  dat3$weight = 0
+  dat3[dat3$expected_resp=="entailment", ]$weight = (n_n / n_e)
+  dat3[dat3$expected_resp=="neutral", ]$weight = 1
+  
+  accuracy = Vectorize(function(th) mean((c("neutral", "entailment")[(dat3$response > th) + 1] == dat3$expected_resp)*dat3$weight))
+  
+  entailment_opt = optimize(accuracy, c(0, 100), maximum=TRUE)
+  
+  entailment_threshold = entailment_opt$maximum
+  
+  workerid_thresholds_ent = rbind(workerid_thresholds_ent, data.frame(anon_id=wid, e_threshold=entailment_threshold))
+
+}
+
+workerid_thresholds_cont = data.frame()
+
+for (wid in workerids)  {
+  
+  dat4 <- dat %>% filter(expected_resp != "entailment") %>%
+    filter(response < 50) %>%
+    mutate(expected_resp = factor(expected_resp))
+  
+  dat4.other = dat4 %>% filter(anon_id != wid)
+  dat4.this = dat4 %>% filter(anon_id == wid)
+  
+  n.this = nrow(dat4.this)
+  if (n.this > 0) {
+    dat4.this = dat4.this[rep(1:n.this, times=50),]
+    dat4 = rbind(dat4.other, dat4.this)
+    
+  } else {
+    dat4 = dat4.other
+  }
+  
+
+  dat4 <- dat %>% filter(expected_resp != "entailment") %>%
+    filter(response < 50) %>%
+    mutate(expected_resp = factor(expected_resp))
+  
+  
+  n_c = sum(dat4$expected_resp=="contradiction")
+  n_n = sum(dat4$expected_resp=="neutral")
+  
+  dat4$weight = 0
+  dat4[dat4$expected_resp=="contradiction", ]$weight = (n_n / n_c)
+  dat4[dat4$expected_resp=="neutral", ]$weight = 1
+  
+  
+  accuracy = Vectorize(function(th) mean((c("neutral", "contradiction")[(dat4$response < th) + 1] == dat4$expected_resp)*dat4$weight))
+  
+  contradiction_opt = optimize(accuracy, c(0, 100), maximum=TRUE)
+  contradiction_threshold = contradiction_opt$maximum
+  
+  workerid_thresholds_cont = rbind(workerid_thresholds_cont, data.frame(anon_id=wid, c_threshold=contradiction_threshold))
 
 
-n_e = sum(dat3$expected_resp=="entailment")
-n_n = sum(dat3$expected_resp=="neutral")
+}
 
-dat3$weight = 0
-dat3[dat3$expected_resp=="entailment", ]$weight = (n_n / n_e)
-dat3[dat3$expected_resp=="neutral", ]$weight = 1
-
-accuracy = Vectorize(function(th) mean((c("neutral", "entailment")[(dat3$response > th) + 1] == dat3$expected_resp)*dat3$weight))
-
-entailment_opt = optimize(accuracy, c(0, 100), maximum=TRUE)
-
-entailment_threshold = entailment_opt$maximum
+workerid_thresholds = merge(workerid_thresholds_ent, workerid_thresholds_cont, by="anon_id")
 
 
-dat4 <- dat %>% filter(expected_resp != "entailment") %>%
-  filter(response < 50) %>%
-  mutate(expected_resp = factor(expected_resp))
 
-
-n_c = sum(dat4$expected_resp=="contradiction")
-n_n = sum(dat4$expected_resp=="neutral")
-
-dat4$weight = 0
-dat4[dat4$expected_resp=="contradiction", ]$weight = (n_n / n_c)
-dat4[dat4$expected_resp=="neutral", ]$weight = 1
-
-
-accuracy = Vectorize(function(th) mean((c("neutral", "contradiction")[(dat4$response < th) + 1] == dat4$expected_resp)*dat4$weight))
-
-contradiction_opt = optimize(accuracy, c(0, 100), maximum=TRUE)
-contradiction_threshold = contradiction_opt$maximum
-
-
-dat %>% ggplot(aes(x=response, col = expected_resp, fill=expected_resp)) + 
-  geom_density(alpha=.7)  + 
-  facet_wrap(~expected_resp, scales = "free_y") +
-  theme(legend.position = "bottom") +
-  geom_vline(xintercept=contradiction_threshold, size=.5, alpha=.6, lty=2) +
-  geom_vline(xintercept=entailment_threshold, size=.5, lty=2, alpha=.6) + 
-  ggtitle("all workers") +
-  geom_text(x=entailment_threshold-7, y=0.7, label=round(entailment_threshold,2), col="black") +
-  geom_text(x=contradiction_threshold+7, y=0.7, label=round(contradiction_threshold,2), col="black")
+# dat %>% ggplot(aes(x=response, col = expected_resp, fill=expected_resp)) + 
+#   geom_density(alpha=.7)  + 
+#   facet_wrap(~expected_resp, scales = "free_y") +
+#   theme(legend.position = "bottom") +
+#   geom_vline(xintercept=contradiction_threshold, size=.5, alpha=.6, lty=2) +
+#   geom_vline(xintercept=entailment_threshold, size=.5, lty=2, alpha=.6) + 
+#   ggtitle("all workers") +
+#   geom_text(x=entailment_threshold-7, y=0.7, label=round(entailment_threshold,2), col="black") +
+#   geom_text(x=contradiction_threshold+7, y=0.7, label=round(contradiction_threshold,2), col="black")
 
 
 
 
 target_items = read.csv("../annotated_corpus/main_corpus.individual_ratings.csv") %>% 
-  mutate(response_cat = cut(response, breaks=c(-1, contradiction_threshold, entailment_threshold, 101), labels=c("C", "N", "E")))
+  merge(workerid_thresholds, by=c("anon_id")) %>%
+  rowwise() %>%
+  mutate(response_cat = cut(response, breaks=c(-1, c_threshold, e_threshold, 101), labels=c("C", "N", "E")))
 
 target_grouped = target_items %>% 
   dplyr::group_by(type, id) %>% 
@@ -90,7 +140,8 @@ target_grouped = target_items %>%
   dplyr::mutate(label = factor(label, levels=c(1,2,3), labels = c("C", "N", "E"))) %>%
   dplyr::rename(sent_id = id) %>%
   dplyr::arrange(sent_id, type) %>%
-  dplyr::select(sent_id, type, label, all_labels, ratings, workerids)
+  dplyr::select(sent_id, type, label, all_labels, ratings, workerids) %>%
+  dplyr::filter(!is.na(label))
 
 
 write.csv(target_grouped, "../annotated_corpus/main_corpus.nli_labels.csv", row.names = F)

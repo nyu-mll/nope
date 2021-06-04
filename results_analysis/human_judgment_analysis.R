@@ -94,6 +94,11 @@ long_dat2 <- long_dat %>%
 # overall (run without last two lines of above piping)
 mean(long_dat2$acc)
 
+ldat3<-long_dat2 %>%
+  filter(sent_id %in% adv_nums)%>%
+  group_by(adversarial)%>%
+  summarise(meanacc=mean(acc))
+mean(ldat3$acc)
 
 # ------------ Calculate agreement, recomputing gold label from 4 people --------------------------
 
@@ -113,6 +118,7 @@ for(n in c(1:length(nums))){
                  type==types[ty],
                  trigger==as.character(triggers[tr]),
                  adversarial==advs[adv])
+        # some of the resulting dataframes will be empty. Don't try to use those
         if(nrow(temp_dat)==5){
           for(i in c(1:5)){
             this_id = temp_dat$worker[i]
@@ -120,12 +126,8 @@ for(n in c(1:length(nums))){
             new_temp_dat = temp_dat %>% filter(worker != this_id)
             these_labels = new_temp_dat$label
             freqs = as.data.frame(table(these_labels)) %>% filter(Freq > 2)
-            # if there's a winner, make that the gold label, otherwise just set gold to none
-            #if(nrow(freqs) > 0){
+            # if there's a winner, make that the gold label, otherwise this value will be NA
             gold_label = as.character(freqs$these_labels[1])
-            #} else {
-            #  gold_label == "none"
-            #}
             # remake data frame info needed
             this_temp_dat = setNames(data.frame(matrix(ncol = 8, nrow = 1)), 
                                      c("sent_id", "type", "trigger", "adversarial",
@@ -146,6 +148,10 @@ for(n in c(1:length(nums))){
   }
 }
 
+# check how many gold labels become NA
+sum(is.na(aggr_dat$new_gold_label))/nrow(aggr_dat)
+
+# look at accuracy
 aggr_dat2 <- aggr_dat %>%
   mutate(acc = case_when(new_gold_label == worker_label ~ 1,
                          new_gold_label != worker_label ~ 0))%>%
@@ -165,3 +171,52 @@ for(j in c(1:nrow(dat3))){
   temp_dat$same_check = is_same(list_labels)
   unan_dat = rbind(unan_dat, temp_dat)
 }
+
+# What percent had unanimous agreement
+mean(unan_dat$same_check)
+
+# -------------- Count expected values -------------------
+exp_dat <-long_dat %>%
+  filter(!(type=="negated" & trigger=="factives"))%>%
+  mutate(expected_label_matches_gold = case_when(adversarial=="non" & gold_label == "Entailment" ~ 1,
+                                                 adversarial=="non" & gold_label != "Entailment" ~ 0,
+                                                 adversarial=="adv" & gold_label == "Entailment" ~ 0,
+                                                 adversarial=="adv" & gold_label != "Entailment" ~ 1,))%>%
+  mutate(expected_label_matches_individual = case_when(adversarial=="non" & label == "E" ~ 1,
+                                                       adversarial=="non" & label != "E" ~ 0,
+                                                       adversarial=="adv" & label == "E" ~ 0,
+                                                       adversarial=="adv" & label != "E" ~ 1,))
+
+mean(exp_dat$expected_label_matches_gold)
+mean(exp_dat$expected_label_matches_individual)
+
+# -------------- Calculate fleiss' kappa -------------------
+
+
+
+# -------------- Calculate human agreement in ANLI -------------------
+R1 = 100-(70.32+2.97)
+R2 = 100-(83.41+2.05)
+R3 = 100-(82.53+2.11)
+
+s1 = 2000/6400
+s2 = 2000/6400
+s3 = 2400/6400
+
+# B1 = unanimous
+# B1 = ((13.25/R1)+(5.54/R2)+(5.81/R3))/3
+B1 = s1*(13.25/R1) + s2*(5.54/R2) + s3*(5.81/R3)
+
+#B2 + B1 + C = validated correct at all
+# B2 = ((5.07/R1)+(2.53/R2)+(2.79/R3))/3
+# C = ((8.38/R1)+(6.47/R2)+(6.76/R3))/3
+B2 = s1*(5.07/R1) + s2*(2.53/R2) + s3*(2.79/R3)
+C = s1*(8.38/R1) + s2*(6.47/R2) + s3*(6.76/R3)
+B1 + B2 + C
+
+#D = no winner
+# D = ((2.97/R1)+(2.05/R2)+(2.11/R3))/3
+D = s1*(2.97/R1) + s2*(2.05/R2) + s3*(2.11/R3)
+
+# individual human aggreement -- don't count D because it's taken out
+(B1*3 + B2*3 + C*2)/(B1*3 + B2*4 + C*3)

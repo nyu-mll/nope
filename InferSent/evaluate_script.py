@@ -96,6 +96,8 @@ for experiment in os.listdir(args.model_dir):
                                          word_vec, params['word_emb_dim'])
 
             output = nli_net((s1_batch, s1_len), (s2_batch, s2_len))
+            if args.use_cuda:
+                output = output.cpu()
             logits.append(output.detach().numpy())
             preds.append(np.array([['e', 'n', 'c'][int(p)] for p in output.data.max(1)[1]]))
         preds = pd.DataFrame(index=df_eval_data.index, columns=[model_name], data=np.concatenate(preds))

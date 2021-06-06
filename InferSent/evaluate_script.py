@@ -23,6 +23,8 @@ args = parser.parse_args()
 if args.do_tokenize:
     from nltk.tokenize import word_tokenize
 df_eval_data = pd.read_json(args.eval_data_path, orient="records", lines=True)
+if "metadata" in df_eval_data.columns:
+    df_eval_data["metadata"] = df_eval_data["metadata"].apply(str)
 if args.do_tokenize:
     tokenize = lambda s: (" ".join(word_tokenize(s))).replace(" n't ", "n 't ")
     df_eval_data["premise"] = df_eval_data["premise"].apply(tokenize)
@@ -35,7 +37,6 @@ s1 = [[bos] +
 s2 = [[bos] +
       [word for word in sent.split() if word in word_vec] +
       [eos] for sent in df_eval_data["hypothesis"]]
-print(s1[:20])
 
 
 all_predictions = []

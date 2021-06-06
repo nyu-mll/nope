@@ -23,19 +23,19 @@ args = parser.parse_args()
 if args.do_tokenize:
     from nltk.tokenize import word_tokenize
 df_eval_data = pd.read_json(args.eval_data_path, orient="records", lines=True)
-word_vec = build_vocab(list(df_eval_data["hypothesis"]) + list(df_eval_data["premise"]), args.word_emb_path)
-bos, eos = ("<p>", "</p>")
 if args.do_tokenize:
-    tokenize = lambda s: ' '.join(word_tokenize(s).replace(" n't ", "n 't "))
+    tokenize = lambda s: (" ".join(word_tokenize(s))).replace(" n't ", "n 't ")
     df_eval_data["premise"] = df_eval_data["premise"].apply(tokenize)
     df_eval_data["hypothesis"] = df_eval_data["hypothesis"].apply(tokenize)
+word_vec = build_vocab(list(df_eval_data["hypothesis"]) + list(df_eval_data["premise"]), args.word_emb_path)
+bos, eos = ("<p>", "</p>")
 s1 = [[bos] +
       [word for word in sent.split() if word in word_vec] +
       [eos] for sent in df_eval_data["premise"]]
 s2 = [[bos] +
       [word for word in sent.split() if word in word_vec] +
       [eos] for sent in df_eval_data["hypothesis"]]
-labels = np.array(df_eval_data["label"])
+print(s1[:20])
 
 
 all_predictions = []

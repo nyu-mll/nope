@@ -85,6 +85,8 @@ for experiment in os.listdir(args.model_dir):
             nli_net.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
         if args.use_cuda:
             nli_net.classifier.to("cuda:0")
+            if params["encoder_type"] != "BOW":
+                nli_net.encoder.to("cuda:0")
 
         ### RUN EVAL DATA ###
         preds = []

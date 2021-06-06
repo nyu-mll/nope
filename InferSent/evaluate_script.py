@@ -123,4 +123,4 @@ df_all_predictions = pd.concat([df_eval_data] + all_predictions, axis=1).set_ind
 df_all_logits = pd.concat([df_eval_data] + all_logits, axis=1).set_index(list(df_eval_data.columns))
 df_out = {"predicted_label": df_all_predictions, "logits": df_all_logits}
 df_out = pd.concat(df_out, axis=1).reset_index()
-df_out.to_json(os.path.join(args.output_dir, args.output_name + ".all_models.jsonl"), orient="records", lines=True, index=True, force_ascii=False)
+df_out.to_csv(os.path.join(args.output_dir, args.output_name + ".all_models.csv"), orient="records", lines=True, index=True, force_ascii=False)

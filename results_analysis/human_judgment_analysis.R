@@ -1,14 +1,17 @@
 library(tidyverse)
+library(RColorBrewer)
 
 this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
 setwd(this.dir)
 
 set.seed(42)
 
+theme_set(theme_bw())
+
 dat <- read.csv("../annotated_corpus/main_corpus.nli_labels.csv",stringsAsFactors = F)
 
 stims = read.csv("../experiments/stimuli/all_annotations_cleaned.csv")
-stims = stims %>% select(sent_id,trigger)
+stims = stims %>% dplyr::select(sent_id,trigger)
 
 # separate out info about which items are adversarial
 dat_sep <- dat %>%
@@ -27,36 +30,64 @@ dat3<-dat2 %>%
                            label=="N" ~ "Neutral",
                            label=="C" ~ "Contradiction"))%>%
   mutate(type = case_when(type == "target-negated" ~ "negated",
-                          type == "target-original" ~ "original"))
+                          type == "target-original" ~ "original")) %>%
+  mutate(label = factor(label, levels=c("Entailment", "Neutral", "Contradiction", sorted=T))) %>%
+  mutate(trigger = case_when (trigger == "change_of_state" ~ "Change\nof state", 
+                              trigger == "clefts" ~ "Clefts",
+                              trigger == "comparatives" ~ "Comparatives",
+                              trigger == "continuation_of_state" ~ "Aspectual\nverbs",
+                              trigger == "embedded_question" ~ "Embedded\nquestions",
+                              trigger == "factives" ~ "Clause-embed.\nverbs",
+                              trigger == "implicative_predicates" ~ "Implicatives",
+                              trigger == "numeric_determiners" ~ "Numeric\ndeterminers",
+                              trigger == "re_verbs" ~ "Re-verbs",
+                              trigger == "temporal_adverbs" ~ "Temporal\nadverbs",
+                              TRUE ~ trigger
+  ))
 
 # --------- Aggregate NLI labels per trigger * type ----------------
 dat4 <- dat3 %>% filter(adversarial == "non")
 
-(plt.agg<-ggplot(data=dat4, aes(x=type, fill=label))+
-    geom_bar(position='fill')+
-    facet_wrap(~trigger)+
-    ylab("Proportion of responses in each label")+
-    ggtitle("Comparison of labels selected via majority vote of annotators")+
+(plt.agg<-ggplot(data=dat4, aes(y=type, fill=label))+
+    geom_bar(position='fill', orientation = "y")+
+    facet_grid(trigger~.,  switch="y")+
+    xlab("Proportion of responses with each label")+
+    ggtitle("Majority labels for different trigger types")+
     theme(plot.title = element_text(hjust = 0.5),
-          legend.position = c(0.85, 0.13))
+          legend.position = "bottom") +
+    theme(strip.text.y.left = element_text(
+      size = 10, angle=0, hjust=1
+    ), strip.background = element_blank(), panel.border = element_blank()) +
+    scale_fill_manual(name="Label", values = c("#1b9e77", "#7570b3", "#d95f02")) +
+    scale_y_discrete(position = "right", name="")
+  
   )
 
-ggsave("figures/aggregate_labels.png",plt.agg,width=6.5,height=5)
+ggsave("figures/aggregate_labels.pdf",plt.agg,width=4.5,height=6)
 
 # --------- Now for adversarial examples ----------------
 
 dat5 <- dat3 %>% filter(adversarial == "adv")
 
-(plt.adv<-ggplot(data=dat5, aes(x=type, fill=label))+
-    geom_bar(position='fill')+
-    facet_wrap(~trigger)+
-    ylab("Proportion of responses in each label")+
-    ggtitle("Adversarial examples, with labels selected via majority vote of annotators")+
+
+
+(plt.adv<-ggplot(data=dat5, aes(y=type, fill=label))+
+    geom_bar(position='fill', orientation = "y")+
+    facet_grid(trigger~.,  switch="y")+
+    xlab("Proportion of responses with each label")+
+    ggtitle("Majority labels for adversarial examples")+
     theme(plot.title = element_text(hjust = 0.5),
-          legend.position = c(0.85, 0.13))
+          legend.position = "bottom") +
+    theme(strip.text.y.left = element_text(
+      size = 10, angle=0, hjust=1
+    ), strip.background = element_blank(), panel.border = element_blank()) +
+    scale_fill_manual(name="Label", values = c("#1b9e77", "#7570b3", "#d95f02")) +
+    scale_y_discrete(position = "right", name="")
+  
 )
 
-ggsave("figures/adversarial_labels.png",plt.adv,width=6.5,height=5)
+
+ggsave("figures/adversarial_labels.pdf",plt.adv,width=4.5,height=6)
 
 # ------------ Calculate agreement with gold label --------------------------
 

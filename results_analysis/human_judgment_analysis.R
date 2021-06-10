@@ -1,10 +1,22 @@
 library(tidyverse)
+library(irr)
+library(rjson)
+library(jsonlite)
+library(treemapify)
+library(wesanderson)
 library(RColorBrewer)
 
 this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
 setwd(this.dir)
 
 set.seed(42)
+
+# function for reading in .jsonl files
+read_json_lines <- function(file){
+  con <- file(file, open = "r")
+  on.exit(close(con))
+  jsonlite::stream_in(con, verbose = FALSE)
+}
 
 theme_set(theme_bw())
 
@@ -223,7 +235,42 @@ mean(exp_dat$expected_label_matches_individual)
 
 # -------------- Calculate fleiss' kappa -------------------
 
++# input = n*m matrix or dataframe, n subjects m raters
+  # dat_irr <- long_dat %>%
+  #   unite("full_id",sent_id,type,adversarial) %>%
+  #   select(full_id,label,worker)%>%
+  #   spread(worker,label)  
+  # 
+  # kappam.fleiss2(dat_irr[,1:ncol(dat_irr)])
+  
+  jdat <- read_json_lines("../annotated_corpus/nli_corpus.main.jsonl")
 
+dat_irr <- do.call(rbind, jdat_metadata$nli_labels)
+kappam.fleiss(dat_irr)
+
+jdat_labels<-jdat$metadata["nli_labels"]
+jdat_triggers<-jdat$metadata["trigger_type"]
+jdat_type<-jdat$metadata["type"]
+
+jdat_full = cbind(jdat_labels,cbind(jdat_triggers,jdat_type))
+
+triggers = unique(jdat_full$trigger_type)
+types = unique(jdat_full$type)
+
+data = data.frame(matrix(ncol = length(types), nrow = length(triggers)))
+colnames(data) = types
+rownames(data) = triggers
+
+for(tr in triggers){
+  for(ty in types){
+    this_dat<-jdat_full %>%
+      filter(trigger_type == tr,
+             type == ty)
+    dat_irr <- do.call(rbind, this_dat$nli_labels)
+    k = kappam.fleiss(dat_irr)
+    data[as.character(tr),as.character(ty)] <- k$value
+  }
+}
 
 # -------------- Calculate human agreement in ANLI -------------------
 R1 = 100-(70.32+2.97)
@@ -251,3 +298,61 @@ D = s1*(2.97/R1) + s2*(2.05/R2) + s3*(2.11/R3)
 
 # individual human aggreement -- don't count D because it's taken out
 (B1*3 + B2*3 + C*2)/(B1*3 + B2*4 + C*3)
+
++# -------------- Human agreement with model judgments -------------------
+main = read.csv("../annotated_corpus/nli_corpus.main.csv",stringsAsFactors = F)
+adv = read.csv("../annotated_corpus/nli_corpus.adv.csv",stringsAsFactors = F)
+
+dats<-rbind(main,adv)
+
+dats2<-dats%>%
+  separate(uid,c("uid","mod","adv"))%>%
+  select(-mod,-adv,-speaker_context1,-speaker_context2,-speaker_target,-trigger_data,
+         -premise,-hypothesis,-context1,-context2,-target_sentence,-annotator)%>%
+  mutate(negated_premise = case_when(type=="negated"&original_negated=="False" ~ "negated",
+                                     type=="negated"&original_negated=="True" ~ "nonnegated",
+                                     type=="original"&original_negated=="False" ~ "nonnegated",
+                                     type=="original"&original_negated=="True" ~ "negated"))%>%
+  select(-original_negated,-type)%>%
+  mutate(uid_adv = case_when(adversarial == "True" ~ paste0(uid,"_adv"),
+                             adversarial == "False" ~ paste0(uid, "_non")))%>%
+  select(-uid,-adversarial,-ratings,-nli_labels)%>%
+  spread(negated_premise,label)%>%
+  mutate(changed = case_when(negated==nonnegated ~ 0,
+                             negated!=nonnegated ~ 1))%>%
+  filter(!is.na(changed))
+
+# look at aggregates
+dats3<-dats2%>%
+  separate(uid_adv,c("uid","adv"))%>%
+  group_by(trigger_type,adv)%>%
+  summarise(change_pct = mean(changed))
+
+# characterize switch
+dats4<-dats2%>%
+  separate(uid_adv,c("uid","adv"))%>%
+  mutate(switch_type = paste0(nonnegated,"_to_",negated))%>%
+  mutate(Switch = case_when(switch_type == "C_to_C" | switch_type == "E_to_E" | switch_type == "N_to_N" ~ "No switch",
+                            switch_type == "E_to_C" | switch_type == "E_to_N" ~ "E -> *",
+                            switch_type == "C_to_E" | switch_type == "N_to_E" ~ "* -> E",
+                            switch_type == "C_to_N" | switch_type == "N_to_C" ~ "Other")) %>%
+  group_by(trigger_type,adv,Switch)%>%
+  summarise(change_pct = mean(changed),
+            count=n())%>%
+  filter(adv=="non")%>%
+  
+  (tree_plt=ggplot(data=dats4, aes(area=count,fill=Switch))+
+     geom_treemap()+
+     scale_fill_manual(values=wes_palette(n=4, name="GrandBudapest1"))+
+     facet_wrap(~trigger_type))
+
+# dats4 as proportions 
+dats5<-dats4 %>%
+  group_by(trigger_type)%>%
+  mutate(total = sum(count))%>%
+  ungroup()%>%
+  mutate(proportion = 100*count/total)
+
+
+# get model judgments from roberta/deberta
+

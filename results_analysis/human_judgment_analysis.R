@@ -1,5 +1,4 @@
 library(tidyverse)
-library(RColorBrewer)
 
 this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
 setwd(this.dir)
@@ -8,47 +7,70 @@ set.seed(42)
 
 theme_set(theme_bw())
 
-dat <- read.csv("../annotated_corpus/main_corpus.nli_labels.csv",stringsAsFactors = F)
+dat.main <- read.csv("../annotated_corpus/nli_corpus.main.csv",stringsAsFactors = F)
+dat.adv <- read.csv("../annotated_corpus/nli_corpus.adv.csv",stringsAsFactors = F)
 
-stims = read.csv("../experiments/stimuli/all_annotations_cleaned.csv")
-stims = stims %>% dplyr::select(sent_id,trigger)
+# n = 2386
+nrow(dat.main)
 
-# separate out info about which items are adversarial
-dat_sep <- dat %>%
-  separate(sent_id, c("id_num","adv"), sep = "_")%>%
-  mutate(adversarial = case_when(is.na(adv) ~ "non",
-                                 !is.na(adv) ~ "adv"))%>%
-  mutate(sent_id = case_when(adversarial=="non" ~ id_num,
-                        adversarial=="adv" ~ adv))%>%
-  select(-adv,-id_num)
+# n =  346
+nrow(dat.adv)
 
-# add in trigger info
-dat2 <- merge(dat_sep,stims,by="sent_id")
 
-dat3<-dat2 %>%
+# compute whether item is negated (original_negated & type=original  or !original_negated && type=negated)
+
+dat.main = dat.main %>% 
+  mutate(negated = case_when(original_negated == "False" & type == "negated" ~ "negated",
+                             original_negated == "True" & type == "original" ~ "negated",
+                              T ~ "non-negated"))
+
+dat.adv = dat.adv %>% 
+  mutate(negated = case_when(original_negated == "False" & type == "negated" ~ "negated",
+                             original_negated == "True" & type == "original" ~ "negated",
+                             T ~ "non-negated"))
+
+
+
+dat.main = dat.main %>%
   mutate(label = case_when(label=="E" ~ "Entailment",
                            label=="N" ~ "Neutral",
                            label=="C" ~ "Contradiction"))%>%
-  mutate(type = case_when(type == "target-negated" ~ "negated",
-                          type == "target-original" ~ "original")) %>%
   mutate(label = factor(label, levels=c("Entailment", "Neutral", "Contradiction", sorted=T))) %>%
-  mutate(trigger = case_when (trigger == "change_of_state" ~ "Change\nof state", 
-                              trigger == "clefts" ~ "Clefts",
-                              trigger == "comparatives" ~ "Comparatives",
-                              trigger == "continuation_of_state" ~ "Aspectual\nverbs",
-                              trigger == "embedded_question" ~ "Embedded\nquestions",
-                              trigger == "factives" ~ "Clause-embed.\nverbs",
-                              trigger == "implicative_predicates" ~ "Implicatives",
-                              trigger == "numeric_determiners" ~ "Numeric\ndeterminers",
-                              trigger == "re_verbs" ~ "Re-verbs",
-                              trigger == "temporal_adverbs" ~ "Temporal\nadverbs",
-                              TRUE ~ trigger
+  mutate(trigger = case_when (trigger_type == "change_of_state" ~ "Change\nof state", 
+                              trigger_type == "clefts" ~ "Clefts",
+                              trigger_type == "comparatives" ~ "Comparatives",
+                              trigger_type == "aspectual_verbs" ~ "Aspectual\nverbs",
+                              trigger_type == "embedded_question" ~ "Embedded\nquestions",
+                              trigger_type == "clause_embedding_predicates" ~ "Clause-embed.\nverbs",
+                              trigger_type == "implicative_predicates" ~ "Implicatives",
+                              trigger_type == "numeric_determiners" ~ "Numeric\ndeterminers",
+                              trigger_type == "re_verbs" ~ "Re-verbs",
+                              trigger_type == "temporal_adverbs" ~ "Temporal\nadverbs",
+                              TRUE ~ trigger_type
   ))
 
-# --------- Aggregate NLI labels per trigger * type ----------------
-dat4 <- dat3 %>% filter(adversarial == "non")
+dat.adv = dat.adv %>%
+  mutate(label = case_when(label=="E" ~ "Entailment",
+                           label=="N" ~ "Neutral",
+                           label=="C" ~ "Contradiction"))%>%
+  mutate(label = factor(label, levels=c("Entailment", "Neutral", "Contradiction", sorted=T))) %>%
+  mutate(trigger = case_when (trigger_type == "change_of_state" ~ "Change\nof state", 
+                              trigger_type == "clefts" ~ "Clefts",
+                              trigger_type == "comparatives" ~ "Comparatives",
+                              trigger_type == "aspectual_verbs" ~ "Aspectual\nverbs",
+                              trigger_type == "embedded_question" ~ "Embedded\nquestions",
+                              trigger_type == "clause_embedding_predicates" ~ "Clause-embed.\nverbs",
+                              trigger_type == "implicative_predicates" ~ "Implicatives",
+                              trigger_type == "numeric_determiners" ~ "Numeric\ndeterminers",
+                              trigger_type == "re_verbs" ~ "Re-verbs",
+                              trigger_type == "temporal_adverbs" ~ "Temporal\nadverbs",
+                              TRUE ~ trigger_type
+  ))
 
-(plt.agg<-ggplot(data=dat4, aes(y=type, fill=label))+
+
+# --------- Aggregate NLI labels per trigger * type ----------------
+
+(plt.agg<-ggplot(data=dat.main, aes(y=negated, fill=label))+
     geom_bar(position='fill', orientation = "y")+
     facet_grid(trigger~.,  switch="y")+
     xlab("Proportion of responses with each label")+
@@ -67,11 +89,9 @@ ggsave("figures/aggregate_labels.pdf",plt.agg,width=4.5,height=6)
 
 # --------- Now for adversarial examples ----------------
 
-dat5 <- dat3 %>% filter(adversarial == "adv")
 
 
-
-(plt.adv<-ggplot(data=dat5, aes(y=type, fill=label))+
+(plt.adv<-ggplot(data=dat.adv, aes(y=negated, fill=label))+
     geom_bar(position='fill', orientation = "y")+
     facet_grid(trigger~.,  switch="y")+
     xlab("Proportion of responses with each label")+
@@ -94,20 +114,22 @@ ggsave("figures/adversarial_labels.pdf",plt.adv,width=4.5,height=6)
 # make data easier to work with 
 long_dat = NULL
 
+dat3 = rbind(dat.main, dat.adv)
+
 for(j in c(1:nrow(dat3))){
   temp_dat = dat3[j,]
-  these_labels = temp_dat$all_labels
-  these_workers = temp_dat$workerids
+  these_labels = temp_dat$nli_labels
+  #these_workers = temp_dat$workerids
   these_ratings = temp_dat$ratings
   list_labels = strsplit(these_labels, ",")[[1]]
-  list_workers = strsplit(these_workers, ",")[[1]]
+  #list_workers = strsplit(these_workers, ",")[[1]]
   list_ratings = strsplit(these_ratings, ",")[[1]]
   for(i in c(1:5)){
     this_temp <- temp_dat %>%
-      select(sent_id, type, label, adversarial, trigger) %>%
+      select(uid, type, label, adversarial, trigger) %>%
       rename("gold_label" = label)
     this_temp$label = list_labels[i]
-    this_temp$worker = list_workers[i]
+    #this_temp$worker = list_workers[i]
     this_temp$rating = list_ratings[i]
     long_dat = rbind(long_dat, this_temp)
   }
@@ -118,7 +140,8 @@ long_dat2 <- long_dat %>%
                            label=="N" ~ "Neutral",
                            label=="C" ~ "Contradiction"))%>%
   mutate(acc = case_when(label == gold_label ~ 1,
-                         label != gold_label ~0))%>%
+                         label != gold_label ~0)) 
+long_dat2%>%
   group_by(trigger)%>%
   summarise(mean_acc = mean(acc))
 
@@ -133,63 +156,63 @@ mean(ldat3$acc)
 
 # ------------ Calculate agreement, recomputing gold label from 4 people --------------------------
 
-aggr_dat = NULL
-
-nums = unique(long_dat$sent_id)
-types = unique(long_dat$type)
-triggers = unique(long_dat$trigger)
-advs = unique(long_dat$adversarial)
-
-for(n in c(1:length(nums))){
-  for(ty in c(1:length(types))){
-    for(tr in c(1:length(triggers))){
-      for(adv in c(1:length(advs))){
-        temp_dat = long_dat %>%
-          filter(sent_id == nums[n],
-                 type==types[ty],
-                 trigger==as.character(triggers[tr]),
-                 adversarial==advs[adv])
-        # some of the resulting dataframes will be empty. Don't try to use those
-        if(nrow(temp_dat)==5){
-          for(i in c(1:5)){
-            this_id = temp_dat$worker[i]
-            this_worker_label = temp_dat$label[temp_dat$worker==this_id]
-            new_temp_dat = temp_dat %>% filter(worker != this_id)
-            these_labels = new_temp_dat$label
-            freqs = as.data.frame(table(these_labels)) %>% filter(Freq > 2)
-            # if there's a winner, make that the gold label, otherwise this value will be NA
-            gold_label = as.character(freqs$these_labels[1])
-            # remake data frame info needed
-            this_temp_dat = setNames(data.frame(matrix(ncol = 8, nrow = 1)), 
-                                     c("sent_id", "type", "trigger", "adversarial",
-                                       "gold_label", "worker_eval", "new_gold_label", "worker_label"))
-            this_temp_dat$sent_id = nums[n]
-            this_temp_dat$type = types[ty]
-            this_temp_dat$trigger = as.character(triggers[tr])
-            this_temp_dat$adversarial = advs[adv]
-            this_temp_dat$gold_label = as.character(unique(temp_dat$gold_label))
-            this_temp_dat$worker_eval = this_id
-            this_temp_dat$new_gold_label = gold_label
-            this_temp_dat$worker_label = this_worker_label
-            aggr_dat = rbind(aggr_dat, this_temp_dat)
-          }
-        } 
-      }
-    }
-  }
-}
-
-# check how many gold labels become NA
-sum(is.na(aggr_dat$new_gold_label))/nrow(aggr_dat)
-
-# look at accuracy
-aggr_dat2 <- aggr_dat %>%
-  mutate(acc = case_when(new_gold_label == worker_label ~ 1,
-                         new_gold_label != worker_label ~ 0))%>%
-  group_by(trigger)%>%
-  summarise(mean_acc = mean(acc, na.rm=T))
-
-mean(aggr_dat2$acc,na.rm=T)
+#aggr_dat = NULL
+#
+#nums = unique(long_dat$sent_id)
+#types = unique(long_dat$type)
+#triggers = unique(long_dat$trigger)
+#advs = unique(long_dat$adversarial)
+#
+#for(n in c(1:length(nums))){
+#  for(ty in c(1:length(types))){
+#    for(tr in c(1:length(triggers))){
+#      for(adv in c(1:length(advs))){
+#        temp_dat = long_dat %>%
+#          filter(sent_id == nums[n],
+#                 type==types[ty],
+#                 trigger==as.character(triggers[tr]),
+#                 adversarial==advs[adv])
+#        # some of the resulting dataframes will be empty. Don't try to use those
+#        if(nrow(temp_dat)==5){
+#          for(i in c(1:5)){
+#            this_id = temp_dat$worker[i]
+#            this_worker_label = temp_dat$label[temp_dat$worker==this_id]
+#            new_temp_dat = temp_dat %>% filter(worker != this_id)
+#            these_labels = new_temp_dat$label
+#            freqs = as.data.frame(table(these_labels)) %>% filter(Freq > 2)
+#            # if there's a winner, make that the gold label, otherwise this value will be NA
+#            gold_label = as.character(freqs$these_labels[1])
+#            # remake data frame info needed
+#            this_temp_dat = setNames(data.frame(matrix(ncol = 8, nrow = 1)), 
+#                                     c("sent_id", "type", "trigger", "adversarial",
+#                                       "gold_label", "worker_eval", "new_gold_label", "worker_label"))
+#            this_temp_dat$sent_id = nums[n]
+#            this_temp_dat$type = types[ty]
+#            this_temp_dat$trigger = as.character(triggers[tr])
+#            this_temp_dat$adversarial = advs[adv]
+#            this_temp_dat$gold_label = as.character(unique(temp_dat$gold_label))
+#            this_temp_dat$worker_eval = this_id
+#            this_temp_dat$new_gold_label = gold_label
+#            this_temp_dat$worker_label = this_worker_label
+#            aggr_dat = rbind(aggr_dat, this_temp_dat)
+#          }
+#        } 
+#      }
+#    }
+#  }
+#}
+#
+## check how many gold labels become NA
+#sum(is.na(aggr_dat$new_gold_label))/nrow(aggr_dat)
+#
+## look at accuracy
+#aggr_dat2 <- aggr_dat %>%
+#  mutate(acc = case_when(new_gold_label == worker_label ~ 1,
+#                         new_gold_label != worker_label ~ 0))%>%
+#  group_by(trigger)%>%
+#  summarise(mean_acc = mean(acc, na.rm=T))
+#
+#mean(aggr_dat2$acc,na.rm=T)
 
 # ------------ Count unanimous --------------------------
 
@@ -198,7 +221,7 @@ unan_dat = NULL
 
 for(j in c(1:nrow(dat3))){
   temp_dat = dat3[j,]
-  list_labels = strsplit(temp_dat$all_labels, ",")[[1]]
+  list_labels = strsplit(temp_dat$nli_labels, ",")[[1]]
   temp_dat$same_check = is_same(list_labels)
   unan_dat = rbind(unan_dat, temp_dat)
 }
@@ -207,20 +230,20 @@ for(j in c(1:nrow(dat3))){
 mean(unan_dat$same_check)
 
 # -------------- Count expected values -------------------
-exp_dat <-long_dat %>%
-  filter(!(type=="negated" & trigger=="factives"))%>%
-  mutate(expected_label_matches_gold = case_when(adversarial=="non" & gold_label == "Entailment" ~ 1,
-                                                 adversarial=="non" & gold_label != "Entailment" ~ 0,
-                                                 adversarial=="adv" & gold_label == "Entailment" ~ 0,
-                                                 adversarial=="adv" & gold_label != "Entailment" ~ 1,))%>%
-  mutate(expected_label_matches_individual = case_when(adversarial=="non" & label == "E" ~ 1,
-                                                       adversarial=="non" & label != "E" ~ 0,
-                                                       adversarial=="adv" & label == "E" ~ 0,
-                                                       adversarial=="adv" & label != "E" ~ 1,))
-
-mean(exp_dat$expected_label_matches_gold)
-mean(exp_dat$expected_label_matches_individual)
-
+#exp_dat <-long_dat %>%
+#  filter(!(type=="negated" & trigger=="factives"))%>%
+#  mutate(expected_label_matches_gold = case_when(adversarial=="non" & gold_label == "Entailment" ~ 1,
+#                                                 adversarial=="non" & gold_label != "Entailment" ~ 0,
+#                                                 adversarial=="adv" & gold_label == "Entailment" ~ 0,
+#                                                 adversarial=="adv" & gold_label != "Entailment" ~ 1,))%>%
+#  mutate(expected_label_matches_individual = case_when(adversarial=="non" & label == "E" ~ 1,
+#                                                       adversarial=="non" & label != "E" ~ 0,
+#                                                       adversarial=="adv" & label == "E" ~ 0,
+#                                                       adversarial=="adv" & label != "E" ~ 1,))
+#
+#mean(exp_dat$expected_label_matches_gold)
+#mean(exp_dat$expected_label_matches_individual)
+#
 # -------------- Calculate fleiss' kappa -------------------
 
 

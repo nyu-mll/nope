@@ -1,6 +1,6 @@
 # NOPE: A Corpus of Naturally-Occurring Presuppositions in English
 
-This repository hosts the corpus described in NOPE: A Corpus of Naturally-Occurring Presuppositions in English, as well as the detailed data from the human and model experiments.
+This repository hosts the corpus described in NOPE: A Corpus of Naturally-Occurring Presuppositions in English, as well as the raw data from the human and model experiments.
 
 ## Downloading the corpus
 

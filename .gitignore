@@ -3,3 +3,6 @@ __pycache__
 DS_Store
 *.conll
 sbatch_scripts/*
+annotated_corpus/corpus_package/
+annotated_corpus/nope.zip
+*.Rds

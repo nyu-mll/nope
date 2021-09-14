@@ -113,14 +113,39 @@ colnames(contrasts(reg_dat$trigger)) <- c("change_of_state", "comparatives", "co
 
 fit = brm(response ~ type * trigger + (1 | anon_id) + (type | id), data=reg_dat, family="beta")
 
+# save fit
+
+saveRDS(fit, "brms_fit.Rds")
+
 summary(fit)
 
 
-predict(fit)
 
 
 theme_set(theme_bw())
-pp_checK(fit)
+pp_check(fit, type="scatter_avg_grouped", group="trigger")
+
+
+
+
+params_effects = fit$fit %>% 
+  as.data.frame() %>% 
+  gather(key="Parameter") %>%
+  filter(grepl("^b_", Parameter)) %>%
+  mutate(Parameter = gsub("b_", "", Parameter))
+
+params_effects_summ = params_effects %>%
+  group_by(Parameter) %>%
+  summarise(lower=quantile(value, 0.025), upper=quantile(value, 0.975))
+
+
+params_effects %>% ggplot(aes(x=value)) +
+  geom_density() + 
+  facet_wrap(~Parameter) + 
+  geom_vline(xintercept=0, color="red") +
+  ggtitle("Predictors") +
+  geom_errorbarh(aes(xmin=lower, xmax=upper, y=0), inherit.aes = F, data = params_effects_summ, color="blue")
+
 
 params_worker = fit$fit %>% 
   as.data.frame() %>% 

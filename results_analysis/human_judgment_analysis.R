@@ -74,7 +74,7 @@ dat.adv = dat.adv %>%
     geom_bar(position='fill', orientation = "y")+
     facet_grid(trigger~.,  switch="y")+
     geom_label(aes(label=n, y=negated), x=0.89, fill="transparent", size=3, label.size=0, color="white", inherit.aes = F, data = dat.main %>% group_by(negated, trigger) %>% summarize(n=paste("n=", n(), sep=""))) +
-    xlab("Proportion of responses with each label")+
+    xlab("majority vote label")+
     ggtitle("Majority labels for different trigger types")+
     theme(plot.title = element_text(hjust = 0.5),
           legend.position = "bottom") +
@@ -95,7 +95,7 @@ ggsave("figures/aggregate_labels.pdf",plt.agg,width=4.5,height=6)
 (plt.adv<-ggplot(data=dat.adv, aes(y=negated, fill=label))+
     geom_bar(position='fill', orientation = "y")+
     facet_grid(trigger~.,  switch="y")+
-    xlab("Proportion of responses with each label")+
+    xlab("majority vote label")+
     ggtitle("Majority labels for adversarial examples")+
     theme(plot.title = element_text(hjust = 0.5),
           legend.position = "bottom") +
@@ -113,14 +113,14 @@ ggsave("figures/adversarial_labels.pdf",plt.adv,width=4.5,height=6)
 
 (plt.adv<-ggplot(data=dat.adv, aes(y=negated, fill=label))+
     geom_bar(position='fill', orientation = "y")+
-    xlab("Proportion of responses with each label")+
+    xlab("majority vote label")+
     ggtitle("Majority labels for adversarial examples")+
     geom_label(aes(label=n, y=negated), x=0.92, fill="transparent", size=3, label.size=0, color="white", inherit.aes = F, data = dat.adv %>% group_by(negated) %>% summarize(n=paste("n=", n(), sep=""))) +
     theme(plot.title = element_text(hjust = 0.5),
-          legend.position = "bottom") +
-    theme(strip.text.y.left = element_text(
-      size = 10, angle=0, hjust=1
-    ), strip.background = element_blank(), panel.border = element_blank()) +
+          legend.position = "bottom", panel.border = element_blank()) +
+    #theme(strip.text.y.left = element_text(
+    #  size = 10, angle=0, hjust=1
+    #), strip.background = element_blank(),  +
     scale_fill_manual(name="Label", values = c("#1b9e77", "#7570b3", "#d95f02")) +
     scale_y_discrete(position = "right", name="")
   
@@ -173,6 +173,18 @@ ldat3<-long_dat2 %>%
   group_by(adversarial)%>%
   summarise(meanacc=mean(acc))
 mean(ldat3$acc)
+
+
+# compute number of exclusions
+
+dat.combined = rbind(dat.main, dat.adv)
+n_unique = length(unique(dat.combined$uid))
+
+raw_results = read.csv("../annotated_corpus/main_corpus.individual_ratings.csv") %>%
+  mutate(uid = paste(id, type, sep="-"))
+n_unqique_raw = length(unique(raw_results$uid))
+
+1 - (n_unique/n_unqique_raw)
 
 # ------------ Calculate agreement, recomputing gold label from 4 people --------------------------
 

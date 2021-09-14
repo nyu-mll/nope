@@ -88,11 +88,6 @@ for (wid in workerids)  {
     dat4 = dat4.other
   }
   
-
-  dat4 <- dat %>% filter(expected_resp != "entailment") %>%
-    filter(response < 50) %>%
-    mutate(expected_resp = factor(expected_resp))
-  
   
   n_c = sum(dat4$expected_resp=="contradiction")
   n_n = sum(dat4$expected_resp=="neutral")

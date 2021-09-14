@@ -150,7 +150,7 @@ If you are using the NOPE corpus, please cite the following paper:
 
 ```
 @inproceedings{NOPE,
-  title={{NOPE}: {A} Corpus of Naturally-Occurring Presuppositions in {E}nglish},
+  title="{NOPE}: {A} Corpus of Naturally-Occurring Presuppositions in {E}nglish",
   author={Parrish, Alicia, and Schuster, Sebastian and Warstadt, Alex and Agha, Omar and Lee, Soo-Hwan and Zhao, Zhuoye and Bowman, Samuel R. and Linzen, Tal},
   booktitle={Proceedings of the 25th Conference on Computational Natural Language Learning (CoNLL)},
   year={2021}

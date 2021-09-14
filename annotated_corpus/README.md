@@ -1,6 +1,6 @@
 # NOPE: A Corpus of Naturally-Occurring Presuppositions in English
 
-The corpus consists of two files, `nli_corpus.main.jsonl` (containing all the examples in the main corpus) and `nli_corpus.adv.jsonl` (containing all the examples in the adversarial corpus).
+The corpus consists of two files, [`nli_corpus.main.jsonl`](./nli_corpus.main.jsonl) (containing all the examples in the main corpus) and [`nli_corpus.adv.jsonl`](./nli_corpus.adv.jsonl) (containing all the examples in the adversarial corpus).
 
 Each example has the following format:
 

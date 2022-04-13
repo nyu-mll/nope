@@ -73,7 +73,7 @@ def main(corpus_path, output_path):
                                 include = True # all three of the children
                             else :
                                 for child in head_token.children:
-                                    if child.tag_ == "CD" and token.dep_ == "nummod":
+                                    if child.tag_ == "CD" and child.dep_ == "nummod":
                                         print(sentence)
                                         include = True # all three children
                                         break
